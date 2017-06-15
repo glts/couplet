@@ -1,1 +1,5 @@
+dist: trusty
 language: clojure
+jdk:
+  - openjdk8
+  - oraclejdk8

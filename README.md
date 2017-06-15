@@ -10,6 +10,7 @@ also supports parallel fold via fork/join.
 This library targets Clojure on the JVM.
 
 [![Clojars Project](https://img.shields.io/clojars/v/ch.gluet/couplet.svg)](https://clojars.org/ch.gluet/couplet)
+[![Build Status](https://travis-ci.org/glts/couplet.svg?branch=master)](https://travis-ci.org/glts/couplet)
 
 ## Licence
 
