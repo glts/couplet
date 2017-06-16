@@ -75,4 +75,4 @@
           strs (map cp/code-point-str
                     (baseline-code-points hammer-rose-dancer))]
       (is (= hammer-rose-dancer
-             (cp/to-str (map from-str) strs))))))
+             (cp/to-str (map (comp first cp/code-points)) strs))))))
