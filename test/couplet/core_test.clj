@@ -42,3 +42,34 @@
            (take-two (cp/code-points "𝓁aundry"))))
     (is (= #{(int \a) 0x1D4C1}
            (take-two (cp/code-points "a𝓁chemy"))))))
+
+(deftest code-point-str-basic
+  (is (= "a"
+         (cp/code-point-str 0x61)))
+  (is (= "😼"
+         "\ud83d\ude3c"
+         (cp/code-point-str 0x1F63C)))
+  (is (= "\ud83d"
+         (cp/code-point-str 0xD83D)))
+  (is (= "\ude3c"
+         (cp/code-point-str 0xDE3C)))
+  (is (thrown? IllegalArgumentException
+        (cp/code-point-str 0xFFFFFF)))
+  (is (thrown? IllegalArgumentException
+        (cp/code-point-str -1))))
+
+(deftest to-str-basic
+  (testing "without transducer"
+    (let [abc "abc"]
+      (is (= abc
+             (cp/to-str (cp/code-points abc)))))
+    (let [hammer-rose-dancer "🔨🌹💃"]
+      (is (= hammer-rose-dancer
+             (cp/to-str (cp/code-points hammer-rose-dancer))))))
+
+  (testing "with transducer"
+    (let [hammer-rose-dancer "🔨🌹💃"
+          strs (map cp/code-point-str
+                    (char-sequence-code-points hammer-rose-dancer))]
+      (is (= hammer-rose-dancer
+             (cp/to-str (map from-str) strs))))))
