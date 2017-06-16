@@ -10,6 +10,9 @@
             [clojure.test.check.clojure-test :refer [defspec]]
             [couplet.core :as cp]))
 
+(defn- baseline-code-points [^CharSequence s]
+  (iterator-seq (.iterator (.codePoints s))))
+
 (deftest reduce-code-points
   (testing "two-argument reduce"
     (is (= []
@@ -70,6 +73,6 @@
   (testing "with transducer"
     (let [hammer-rose-dancer "🔨🌹💃"
           strs (map cp/code-point-str
-                    (char-sequence-code-points hammer-rose-dancer))]
+                    (baseline-code-points hammer-rose-dancer))]
       (is (= hammer-rose-dancer
              (cp/to-str (map from-str) strs))))))
