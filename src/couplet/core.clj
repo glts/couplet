@@ -89,7 +89,7 @@
   inclusive."
   [start end]
   `(s/spec #(s/int-in-range? ~start (inc ~end) %)
-     :gen #(gen/choose ~start ~end)))
+     :gen #(gen/fmap int (gen/choose ~start ~end))))
 
 (s/def ::code-point
   (code-point-in Character/MIN_CODE_POINT Character/MAX_CODE_POINT))
