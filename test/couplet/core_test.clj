@@ -49,7 +49,7 @@
        ;; ranges are generated.
        (gen/fmap (comp baseline-to-str remove-accidental-surrogate-pairs))))
 
-(deftest reduce-code-points
+(deftest reduce-code-points-succeeds
   (testing "two-argument reduce"
     (is (= []
            (reduce conj (cp/code-points ""))))
@@ -82,16 +82,20 @@
     (is (= #{(int \a) 0x1D4C1}
            (take-two (cp/code-points "a𝓁chemy"))))))
 
-(defspec reduce-code-points-same-as-baseline
+(defspec reduce-code-points-equals-baseline
   (for-all [s gen-text]
-    (let [cp-coll (cp/code-points s)
-          cscp-coll (baseline-code-points s)]
-      (= (reduce conj [] cp-coll)
-         (reduce conj [] cscp-coll)))))
+    (= (reduce conj [] (baseline-code-points s))
+       (reduce conj [] (cp/code-points s)))))
 
-(deftest code-point-str-basic
+(deftest code-point-seq-print-method-prints-readably
+  (let [s "star🌟"
+        cps (read-string (pr-str (cp/code-points s)))]
+    (is (instance? couplet.core.CodePointSeq cps))
+    (is (= s (.s ^couplet.core.CodePointSeq cps)))))
+
+(deftest code-point-str-succeeds
   (is (= "a"
-         (cp/code-point-str 0x61)))
+         (cp/code-point-str (int \a))))
   (is (= "😼"
          "\ud83d\ude3c"
          (cp/code-point-str 0x1F63C)))
@@ -104,7 +108,7 @@
   (is (thrown? IllegalArgumentException
         (cp/code-point-str -1))))
 
-(deftest to-str-basic
+(deftest to-str-succeeds
   (testing "without transducer"
     (let [abc "abc"]
       (is (= abc
@@ -115,38 +119,53 @@
 
   (testing "with transducer"
     (let [hammer-rose-dancer "🔨🌹💃"
-          strs (map cp/code-point-str
-                    (baseline-code-points hammer-rose-dancer))]
+          cp-strs (->> (baseline-code-points hammer-rose-dancer)
+                       (map cp/code-point-str))]
       (is (= hammer-rose-dancer
-             (cp/to-str (map (comp first baseline-code-points)) strs))))))
+             (cp/to-str (map (comp first baseline-code-points)) cp-strs))))))
 
-(defspec to-str-roundtrips
+(defspec to-str-equals-baseline
   (for-all [s gen-text]
     (= s
+       (baseline-to-str (cp/code-points s))
        (cp/to-str (cp/code-points s)))))
 
-(deftest fold-basic-usage
-  (let [s "owwh😼w😼fow"]
-    (is (= (into [] (cp/code-points s))
-           (r/fold 4 into conj (cp/code-points s))))
+(deftest fold-succeeds
+  (let [cps (cycle [0x12345 67 89])]
+    (testing "reduce when below default partition size"
+      (let [s (baseline-to-str (take 10 cps))]
+        (is (= (into [] (cp/code-points s))
+               (r/fold into conj (cp/code-points s))))
+        (is (apply + (cp/code-points s))
+            (r/fold + (cp/code-points s)))))
 
-    (is (= [101 102 103 104 105 106 107]
-           (r/fold 1 into conj (cp/code-points "efghijk"))))))
+    (testing "parallel fold"
+      (let [s (baseline-to-str (take 10000 cps))]
+        (is (= (into [] (cp/code-points s))
+               (r/fold into conj (cp/code-points s))))
+        (is (apply + (cp/code-points s))
+            (r/fold + (cp/code-points s))))))
 
-(deftest fold-small-partition-sizes
-  (is (= [119 104 97 116]
-         (r/fold 1 into conj (cp/code-points "what")))))
+  (testing "small partition size"
+    (let [s "lem🍋n"]
+      (is (= (vec (baseline-code-points s))
+             (r/fold 1 into conj (cp/code-points s))))
+      (is (= [0x1F34B]
+             (r/fold 1 into conj (cp/code-points "🍋"))))
+      (is (= []
+             (r/fold 1 into conj (cp/code-points "")))))))
 
 (deftest fold-adjusts-split-index-between-surrogates
   (let [count (fn [n _] (inc n))]
     (is (= 7
            (r/fold 4 + count (cp/code-points "abc\ud83d\ude3cdef"))))))
 
-(defspec fold-code-point-frequencies
-  (let [freqs-fn #(update %1 %2 (fnil inc 0))
+(defspec fold-code-point-frequencies-equals-baseline
+  (let [update-freqs #(update %1 %2 (fnil inc 0))
         merge-freqs (r/monoid (partial merge-with +) hash-map)]
-    ;; Increase partition sizes to avoid StackOverflowError during fork/join.
     (for-all [s gen-text
+              ;; Increase partition size to avoid StackOverflowError due to
+              ;; excessive recursion depth during fork/join.
               n (gen/fmap #(+ 8 %) gen/s-pos-int)]
-      (= (frequencies (cp/code-points s))
-         (r/fold n merge-freqs freqs-fn (cp/code-points s))))))
+      (= (frequencies (baseline-code-points s))
+         (r/fold n merge-freqs update-freqs (cp/code-points s))))))
