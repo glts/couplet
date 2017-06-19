@@ -12,7 +12,7 @@
            [java.io Writer]
            [java.util.concurrent Callable ForkJoinPool ForkJoinTask]))
 
-(defn- code-point-reduce
+(defn- codepoint-reduce
   [^CharSequence s i f val]
   (loop [i (int i)
          ret val]
@@ -47,22 +47,22 @@
       2 (if (and (Character/isHighSurrogate (.charAt s 0))
                  (Character/isLowSurrogate (.charAt s 1)))
           (Character/toCodePoint (.charAt s 0) (.charAt s 1))
-          (code-point-reduce s 1 f (int (.charAt s 0))))
+          (codepoint-reduce s 1 f (int (.charAt s 0))))
       (if (and (Character/isHighSurrogate (.charAt s 0))
                (Character/isLowSurrogate (.charAt s 1)))
-        (code-point-reduce s 2 f (Character/toCodePoint (.charAt s 0) (.charAt s 1)))
-        (code-point-reduce s 1 f (int (.charAt s 0))))))
+        (codepoint-reduce s 2 f (Character/toCodePoint (.charAt s 0) (.charAt s 1)))
+        (codepoint-reduce s 1 f (int (.charAt s 0))))))
   (coll-reduce [_ f val]
     (if (zero? (.length s))
       val
-      (code-point-reduce s 0 f val))))
+      (codepoint-reduce s 0 f val))))
 
 (defmethod print-method CodePointSeq
   [^CodePointSeq cps ^Writer w]
   (.write w "#couplet.core.CodePointSeq")
   (print-method (vector (str (.s cps))) w))
 
-(defn code-points
+(defn codepoints
   "Returns a value that acts like a sequence of code points, wrapping the given
   CharSequence s.
 
@@ -76,42 +76,42 @@
   {:pre [(some? s)]}
   (->CodePointSeq s))
 
-(defn code-point?
+(defn codepoint?
   "Returns true if x is a code point.
 
-  See also the spec :couplet.core/code-point, which has an associated
+  See also the spec :couplet.core/codepoint, which has an associated
   generator."
   [x]
   (and (int? x) (<= Character/MIN_CODE_POINT x Character/MAX_CODE_POINT)))
 
-(defmacro code-point-in
+(defmacro codepoint-in
   "Returns a spec that validates code points in the range from start to end
   inclusive."
   [start end]
   `(s/spec #(s/int-in-range? ~start (inc ~end) %)
      :gen #(gen/fmap int (gen/choose ~start ~end))))
 
-(s/def ::code-point
-  (code-point-in Character/MIN_CODE_POINT Character/MAX_CODE_POINT))
+(s/def ::codepoint
+  (codepoint-in Character/MIN_CODE_POINT Character/MAX_CODE_POINT))
 
-(defn code-point-str
+(defn codepoint-str
   "Returns a string containing the Unicode character specified by code point
   cp."
   [cp]
   (String/valueOf (Character/toChars cp)))
 
-(s/fdef code-point-str
-  :args (s/cat :code-point ::code-point)
+(s/fdef codepoint-str
+  :args (s/cat :codepoint ::codepoint)
   :ret string?
   :fn #(= (count (:ret %))
-          (if (Character/isBmpCodePoint (-> % :args :code-point)) 1 2)))
+          (if (Character/isBmpCodePoint (-> % :args :codepoint)) 1 2)))
 
 (defn append!
   "Reducing function applicable to code point input, with accumulation based on
   (mutable) StringBuilder.
 
   Primarily for use as reducing function in reduce and transduce. For example:
-  (transduce xf append! (code-points \"abc\"))"
+  (transduce xf append! (codepoints \"abc\"))"
   ([] (StringBuilder.))
   ([^StringBuilder sb] (.toString sb))
   ([^StringBuilder sb cp] (.appendCodePoint sb (int cp))))
@@ -133,7 +133,7 @@
   ^ForkJoinTask [^Callable f]
   (ForkJoinTask/adapt f))
 
-(defn- fold-code-points
+(defn- fold-codepoints
   [^CharSequence s start end n combinef reducef]
   ;; n must be 2 or greater. Otherwise the edge case where (- end start) is 2
   ;; and the subsequence contains a surrogate pair would recur infinitely.
@@ -145,9 +145,9 @@
                        (Character/isLowSurrogate (.charAt s split)))
                   inc)
           task (fork-join-task
-                 #(fold-code-points s split end n combinef reducef))]
+                 #(fold-codepoints s split end n combinef reducef))]
       (.fork task)
-      (combinef (fold-code-points s start split n combinef reducef)
+      (combinef (fold-codepoints s start split n combinef reducef)
                 (.join task)))))
 
 (extend-type CodePointSeq
@@ -168,4 +168,4 @@
                    ;; interpreted as an approximate value. Use 2 as the lower
                    ;; bound to avoid some awkwardness when folding with
                    ;; impractical partition size 1.
-                   #(fold-code-points s 0 (.length s) (max 2 n) combinef reducef)))))))
+                   #(fold-codepoints s 0 (.length s) (max 2 n) combinef reducef)))))))

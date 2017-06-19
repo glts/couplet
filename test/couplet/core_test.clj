@@ -7,7 +7,7 @@
             [clojure.test.check.properties :refer [for-all]]
             [couplet.core :as cp]))
 
-(defn- baseline-code-points
+(defn- baseline-codepoints
   [^CharSequence s]
   (iterator-seq (.iterator (.codePoints s))))
 
@@ -17,10 +17,10 @@
     (run! #(.appendCodePoint sb (int %)) cps)
     (str sb)))
 
-(s/def ::ascii (cp/code-point-in 0 127))
-(s/def ::emoji (cp/code-point-in 0x1F600 0x1F64F))
-(s/def ::surrogate (cp/code-point-in (int Character/MIN_SURROGATE)
-                                     (int Character/MAX_SURROGATE)))
+(s/def ::ascii (cp/codepoint-in 0 127))
+(s/def ::emoji (cp/codepoint-in 0x1F600 0x1F64F))
+(s/def ::surrogate (cp/codepoint-in (int Character/MIN_SURROGATE)
+                                    (int Character/MAX_SURROGATE)))
 
 (defn- remove-accidental-surrogate-pairs
   [coll]
@@ -49,123 +49,123 @@
        ;; ranges are generated.
        (gen/fmap (comp baseline-to-str remove-accidental-surrogate-pairs))))
 
-(deftest reduce-code-points-succeeds
+(deftest reduce-codepoints-succeeds
   (testing "two-argument reduce"
     (is (= []
-           (reduce conj (cp/code-points ""))))
+           (reduce conj (cp/codepoints ""))))
     (is (= (int \x)
-           (reduce conj (cp/code-points "x"))))
+           (reduce conj (cp/codepoints "x"))))
     (is (= 0x1F63C
-           (reduce conj (cp/code-points "😼"))))
+           (reduce conj (cp/codepoints "😼"))))
     (is (= 0xD83D
-           (reduce conj (cp/code-points "\ud83d"))))
+           (reduce conj (cp/codepoints "\ud83d"))))
     (is (= (/ (int \x) (int \y))
-           (reduce / (cp/code-points "xy"))))
+           (reduce / (cp/codepoints "xy"))))
     (is (= (/ 0xD83D (int \x))
-           (reduce / (cp/code-points "\ud83dx"))))
+           (reduce / (cp/codepoints "\ud83dx"))))
     (is (= (/ 0x1F63C (int \x))
-           (reduce / (cp/code-points "😼x")))))
+           (reduce / (cp/codepoints "😼x")))))
 
   (testing "three-argument reduce"
     (is (= #{}
-           (reduce conj #{} (cp/code-points ""))))
+           (reduce conj #{} (cp/codepoints ""))))
     (is (= #{(int \x)}
-           (reduce conj #{} (cp/code-points "x"))))
+           (reduce conj #{} (cp/codepoints "x"))))
     (is (= #{0x1F63C}
-           (reduce conj #{} (cp/code-points "😼"))))))
+           (reduce conj #{} (cp/codepoints "😼"))))))
 
-(deftest reduce-code-points-halts-when-reduced
+(deftest reduce-codepoints-halts-when-reduced
   (let [take-two (fn [cps]
                    (transduce (take 2) conj #{} cps))]
     (is (= #{(int \a) 0x1D4C1}
-           (take-two (cp/code-points "𝓁aundry"))))
+           (take-two (cp/codepoints "𝓁aundry"))))
     (is (= #{(int \a) 0x1D4C1}
-           (take-two (cp/code-points "a𝓁chemy"))))))
+           (take-two (cp/codepoints "a𝓁chemy"))))))
 
-(defspec reduce-code-points-equals-baseline
+(defspec reduce-codepoints-equals-baseline
   (for-all [s gen-text]
-    (= (reduce conj [] (baseline-code-points s))
-       (reduce conj [] (cp/code-points s)))))
+    (= (reduce conj [] (baseline-codepoints s))
+       (reduce conj [] (cp/codepoints s)))))
 
-(deftest code-point-seq-print-method-prints-readably
+(deftest codepoint-seq-print-method-prints-readably
   (let [s "star🌟"
-        cps (read-string (pr-str (cp/code-points s)))]
+        cps (read-string (pr-str (cp/codepoints s)))]
     (is (instance? couplet.core.CodePointSeq cps))
     (is (= s (.s ^couplet.core.CodePointSeq cps)))))
 
-(deftest code-point-str-succeeds
+(deftest codepoint-str-succeeds
   (is (= "a"
-         (cp/code-point-str (int \a))))
+         (cp/codepoint-str (int \a))))
   (is (= "😼"
          "\ud83d\ude3c"
-         (cp/code-point-str 0x1F63C)))
+         (cp/codepoint-str 0x1F63C)))
   (is (= "\ud83d"
-         (cp/code-point-str 0xD83D)))
+         (cp/codepoint-str 0xD83D)))
   (is (= "\ude3c"
-         (cp/code-point-str 0xDE3C)))
+         (cp/codepoint-str 0xDE3C)))
   (is (thrown? IllegalArgumentException
-        (cp/code-point-str 0xFFFFFF)))
+        (cp/codepoint-str 0xFFFFFF)))
   (is (thrown? IllegalArgumentException
-        (cp/code-point-str -1))))
+        (cp/codepoint-str -1))))
 
 (deftest to-str-succeeds
   (testing "without transducer"
     (let [abc "abc"]
       (is (= abc
-             (cp/to-str (cp/code-points abc)))))
+             (cp/to-str (cp/codepoints abc)))))
     (let [hammer-rose-dancer "🔨🌹💃"]
       (is (= hammer-rose-dancer
-             (cp/to-str (cp/code-points hammer-rose-dancer))))))
+             (cp/to-str (cp/codepoints hammer-rose-dancer))))))
 
   (testing "with transducer"
     (let [hammer-rose-dancer "🔨🌹💃"
-          cp-strs (->> (baseline-code-points hammer-rose-dancer)
-                       (map cp/code-point-str))]
+          cp-strs (->> (baseline-codepoints hammer-rose-dancer)
+                       (map cp/codepoint-str))]
       (is (= hammer-rose-dancer
-             (cp/to-str (map (comp first baseline-code-points)) cp-strs))))))
+             (cp/to-str (map (comp first baseline-codepoints)) cp-strs))))))
 
 (defspec to-str-equals-baseline
   (for-all [s gen-text]
     (= s
-       (baseline-to-str (cp/code-points s))
-       (cp/to-str (cp/code-points s)))))
+       (baseline-to-str (cp/codepoints s))
+       (cp/to-str (cp/codepoints s)))))
 
 (deftest fold-succeeds
   (let [cps (cycle [0x12345 67 89])]
     (testing "reduce when below default partition size"
       (let [s (baseline-to-str (take 10 cps))]
-        (is (= (into [] (cp/code-points s))
-               (r/fold into conj (cp/code-points s))))
-        (is (apply + (cp/code-points s))
-            (r/fold + (cp/code-points s)))))
+        (is (= (into [] (cp/codepoints s))
+               (r/fold into conj (cp/codepoints s))))
+        (is (apply + (cp/codepoints s))
+            (r/fold + (cp/codepoints s)))))
 
     (testing "parallel fold"
       (let [s (baseline-to-str (take 10000 cps))]
-        (is (= (into [] (cp/code-points s))
-               (r/fold into conj (cp/code-points s))))
-        (is (apply + (cp/code-points s))
-            (r/fold + (cp/code-points s))))))
+        (is (= (into [] (cp/codepoints s))
+               (r/fold into conj (cp/codepoints s))))
+        (is (apply + (cp/codepoints s))
+            (r/fold + (cp/codepoints s))))))
 
   (testing "small partition size"
     (let [s "lem🍋n"]
-      (is (= (vec (baseline-code-points s))
-             (r/fold 1 into conj (cp/code-points s))))
+      (is (= (vec (baseline-codepoints s))
+             (r/fold 1 into conj (cp/codepoints s))))
       (is (= [0x1F34B]
-             (r/fold 1 into conj (cp/code-points "🍋"))))
+             (r/fold 1 into conj (cp/codepoints "🍋"))))
       (is (= []
-             (r/fold 1 into conj (cp/code-points "")))))))
+             (r/fold 1 into conj (cp/codepoints "")))))))
 
 (deftest fold-adjusts-split-index-between-surrogates
   (let [count (fn [n _] (inc n))]
     (is (= 7
-           (r/fold 4 + count (cp/code-points "abc\ud83d\ude3cdef"))))))
+           (r/fold 4 + count (cp/codepoints "abc\ud83d\ude3cdef"))))))
 
-(defspec fold-code-point-frequencies-equals-baseline
+(defspec fold-codepoint-frequencies-equals-baseline
   (let [update-freqs #(update %1 %2 (fnil inc 0))
         merge-freqs (r/monoid (partial merge-with +) hash-map)]
     (for-all [s gen-text
               ;; Increase partition size to avoid StackOverflowError due to
               ;; excessive recursion depth during fork/join.
               n (gen/fmap #(+ 8 %) gen/s-pos-int)]
-      (= (frequencies (baseline-code-points s))
-         (r/fold n merge-freqs update-freqs (cp/code-points s))))))
+      (= (frequencies (baseline-codepoints s))
+         (r/fold n merge-freqs update-freqs (cp/codepoints s))))))
