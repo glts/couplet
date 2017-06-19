@@ -71,7 +71,7 @@
   immutable (like a string).
 
   Unlike CharSequence, CodePointSeq is not counted? and does not support random
-  access. Use seq to obtain a regular seq of code points."
+  access. Use seq to obtain a regular (lazy) seq of code points."
   [s]
   {:pre [(some? s)]}
   (->CodePointSeq s))
