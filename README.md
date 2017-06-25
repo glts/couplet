@@ -15,6 +15,12 @@ This library targets Clojure on the JVM.
 ## Documentation
 
 *   [API documentation](https://glts.github.io/couplet/couplet.core.html)
+*   [Walkthrough](https://github.com/glts/couplet/blob/master/example/walkthrough.clj)
+
+## Requirements
+
+*   Clojure 1.9
+*   Java 8
 
 ## Licence
 
