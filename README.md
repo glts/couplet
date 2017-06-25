@@ -12,15 +12,28 @@ This library targets Clojure on the JVM.
 [![Clojars Project](https://img.shields.io/clojars/v/ch.gluet/couplet.svg)](https://clojars.org/ch.gluet/couplet)
 [![Build Status](https://travis-ci.org/glts/couplet.svg?branch=master)](https://travis-ci.org/glts/couplet)
 
-## Documentation
-
-*   [API documentation](https://glts.github.io/couplet/couplet.core.html)
-*   [Walkthrough](https://github.com/glts/couplet/blob/master/example/walkthrough.clj)
-
 ## Requirements
 
 *   Clojure 1.9
 *   Java 8
+
+## Usage
+
+    (require '[couplet.core :as cp])
+
+    (cp/codepoints "b🐝e🌻e")
+    ; => #couplet.core.CodePointSeq["b🐝e🌻e"]
+
+    (seq (cp/codepoints "b🐝e🌻e"))
+    ; => (98 128029 101 127803 101)
+
+    (cp/to-str (take-nth 2 (cp/codepoints "b🐝e🌻e")))
+    ; => "bee"
+
+## Documentation
+
+*   [API documentation](https://glts.github.io/couplet/couplet.core.html)
+*   [Walkthrough](https://github.com/glts/couplet/blob/master/example/walkthrough.clj)
 
 ## Licence
 
