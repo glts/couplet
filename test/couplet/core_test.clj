@@ -22,8 +22,22 @@
 (s/def ::surrogate (cp/codepoint-in (int Character/MIN_SURROGATE)
                                     (int Character/MAX_SURROGATE)))
 
+(def gen-weighted-codepoints
+  (gen/frequency [[80 (s/gen ::ascii)]
+                  [20 (s/gen ::emoji)]
+                  [5 (s/gen ::surrogate)]]))
+
+(defn high-surrogate? [cp]
+  (<= (int Character/MIN_HIGH_SURROGATE) cp (int Character/MAX_HIGH_SURROGATE)))
+
+(defn low-surrogate? [cp]
+  (<= (int Character/MIN_LOW_SURROGATE) cp (int Character/MAX_LOW_SURROGATE)))
+
 (defn- remove-accidental-surrogate-pairs
   [coll]
+  {:post [(not-any? (fn [[h l]]
+                      (and (high-surrogate? h) (low-surrogate? l)))
+                    (partition 2 1 %))]}
   (->> coll
        (partition-by #(s/valid? ::surrogate %))
        (map (fn [cps]
@@ -37,9 +51,7 @@
   ASCII characters (including control characters) and Emojis, thus containing
   surrogate pairs, as well as the occasional isolated surrogate. Scaled up to
   include larger strings."
-  (->> (gen/frequency [[80 (s/gen ::ascii)]
-                       [20 (s/gen ::emoji)]
-                       [5 (s/gen ::surrogate)]])
+  (->> gen-weighted-codepoints
        gen/vector
        (gen/scale #(* % %))
        ;; The frequency generator above occasionally produces two isolated

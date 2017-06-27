@@ -6,5 +6,8 @@
   :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
                  [org.clojure/spec.alpha "0.1.123"]]
   :profiles {:dev {:dependencies [[org.clojure/test.check "0.9.0"]
-                                  [criterium "0.4.4"]]}}
+                                  [criterium "0.4.4"]]}
+             :benchmark {:source-paths ["benchmark"]
+                         :jvm-opts ^:replace []
+                         :main couplet.core-benchmark}}
   :plugins [[lein-codox "0.10.3"]])

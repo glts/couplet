@@ -27,13 +27,19 @@ This library targets Clojure on the JVM.
     (seq (cp/codepoints "b🐝e🌻e"))
     ; => (98 128029 101 127803 101)
 
-    (cp/to-str (take-nth 2 (cp/codepoints "b🐝e🌻e")))
+    (->> "b🐝e🌻e" cp/codepoints (take-nth 2) cp/to-str)
     ; => "bee"
 
 ## Documentation
 
 *   [API documentation](https://glts.github.io/couplet/couplet.core.html)
 *   [Walkthrough](https://github.com/glts/couplet/blob/master/example/walkthrough.clj)
+
+## Performance
+
+Run the included benchmarks with
+
+    lein trampoline with-profile +benchmark run
 
 ## Licence
 
