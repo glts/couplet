@@ -19,6 +19,9 @@ This library targets Clojure on the JVM.
 
 ## Usage
 
+Require the core namespace as `cp`, then use `cp/codepoints` to obtain a seqable
+of code points.
+
     (require '[couplet.core :as cp])
 
     (cp/codepoints "b🐝e🌻e")
