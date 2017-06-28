@@ -45,7 +45,7 @@
 
 (defn -main
   [& args]
-  (let [text (generate-text 1e5)]
+  (let [text (generate-text 1e6)]
     (bench (couplet-codepoints-count text))
     (bench (couplet-lazy-codepoints-count text))
     (bench (clojure-char-count text))
