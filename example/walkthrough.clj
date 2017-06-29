@@ -19,10 +19,9 @@
 (codepoints "bird 🐦")
 
 ;; A CodePointSeq behaves like a sequence of Unicode characters, or 'code
-;; points' (the term preferred in the JDK). Use seq to obtain a regular lazy seq
-;; of code points. Once you have the seq of code points you can begin
-;; filtering/mapping/reducing right away: code points in Javaland are simply
-;; integers.
+;; points' (the term preferred in the JDK). Use seq to obtain a lazy seq of code
+;; points. Once you have the seq of code points you can begin filtering/mapping/
+;; reducing right away: code points in Javaland are simply integers.
 (seq (codepoints "bird 🐦"))
 (map type (codepoints "bird 🐦"))
 
@@ -30,13 +29,13 @@
 ;; 'codepoint-str' to go back from an integer to a string.
 (run! (comp println codepoint-str) (codepoints "bird 🐦"))
 
-;; If you are new to Unicode character processing on the JVM, or just not
-;; familiar with the topic, you might be wondering what problem this library
-;; solves. In a nutshell: on the JVM, strings are represented in UTF-16
-;; encoding, as sequences of char values. In UTF-16, there is a 1-to-1 mapping
-;; of Unicode character to char only for basic Unicode characters, but not for
-;; some characters of some writing systems of the world, notably, emoji. Those
-;; need to be represented as two chars, a pair of 'surrogate' code units.
+;; If you are not familiar with Unicode character processing on the JVM, you
+;; might be wondering what problem this library solves. In a nutshell: in Java,
+;; strings are represented in UTF-16 encoding, as sequences of char values. In
+;; UTF-16, there is a 1-to-1 mapping of Unicode character to char only for basic
+;; Unicode characters, but not for some characters of some writing systems of
+;; the world, including, notably, emoji. Those need to be represented as two
+;; chars, a pair of so-called 'surrogate' code units.
 
 ;; Thus, Clojure's string handling is based on chars, that is UTF-16 code units,
 ;; not Unicode code points. For many operations like map, filter, reverse, count
@@ -78,9 +77,7 @@
 (defn emoji? [cp]
   (= java.lang.Character$UnicodeBlock/EMOTICONS (unicode-block cp)))
 
-;; Then process to your heart's content.
-
-;; Filter ...
+;; Then process to your heart's content: filter ...
 (->> (codepoints "feeling🙃") (remove emoji?) to-str)
 
 ;; ... map ...
@@ -135,13 +132,13 @@
 
 (def large-string (generate-text 500000))  ; may take a few seconds
 
-;; Now compare the two reductions. On my machine, the second, reducible
-;; invocation is faster than the lazy one by 20-30%.
+;; Now compare the two reductions. The second, reducible invocation is clearly
+;; faster than the lazy one (up to 3x according to the benchmarks).
 (time (into #{} (seq (codepoints large-string))))
 (time (into #{} (codepoints large-string)))
 
-;; As an interesting performance side note, both of the above are faster than
-;; the same for a plain string.
+;; As an interesting performance side note, it is also somewhat faster than the
+;; same for a plain string.
 (time (into #{} large-string))
 
 
