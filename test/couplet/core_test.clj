@@ -176,8 +176,6 @@
   (let [update-freqs #(update %1 %2 (fnil inc 0))
         merge-freqs (r/monoid (partial merge-with +) hash-map)]
     (for-all [s gen-text
-              ;; Increase partition size to avoid StackOverflowError due to
-              ;; excessive recursion depth during fork/join.
-              n (gen/fmap #(+ 8 %) gen/s-pos-int)]
+              n gen/s-pos-int]
       (= (frequencies (baseline-codepoints s))
          (r/fold n merge-freqs update-freqs (cp/codepoints s))))))
