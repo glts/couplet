@@ -38,11 +38,28 @@ of code points.
 *   [API documentation](https://glts.github.io/couplet/couplet.core.html)
 *   [Walkthrough](https://github.com/glts/couplet/blob/master/example/walkthrough.clj)
 
+## Design choices
+
+*   *efficient*: as performant as reasonably possible in Clojure on the JVM
+*   *small*: provide basic building blocks for working with Unicode characters,
+    not more
+*   *transparent*: allow processing any string, no well-formedness requirement
+    imposed or exception thrown on ill-formed UTF-16 input
+
+## Related work
+
+*   https://github.com/richhickey/clojure-contrib/blob/master/src/main/clojure/clojure/contrib/string.clj
+*   https://github.com/daveyarwood/djy
+*   https://github.com/jafingerhut/text.unicode
+
+See also [ICU](http://site.icu-project.org/) for an extensive, mature Java
+library for Unicode.
+
 ## Performance
 
 Run the included benchmarks with
 
-    lein trampoline with-profile +benchmark run
+    lein do clean, trampoline with-profile +benchmark run
 
 ## Licence
 
