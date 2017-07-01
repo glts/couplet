@@ -48,7 +48,7 @@
 
 (def gen-text
   "A generator of supposedly 'natural' text strings containing a happy mix of
-  ASCII characters (including control characters) and Emojis, thus containing
+  ASCII characters (including control characters) and emoji, thus containing
   surrogate pairs, as well as the occasional isolated surrogate. Scaled up to
   include larger strings."
   (->> gen-weighted-codepoints
@@ -56,7 +56,7 @@
        (gen/scale #(* % %))
        ;; The frequency generator above occasionally produces two isolated
        ;; surrogates in a row, potentially creating supplementary code points
-       ;; that are not Emojis. Remove occurrences of accidental high/low
+       ;; that are not emoji. Remove occurrences of accidental high/low
        ;; surrogate pairs in order to ensure only code points in the expected
        ;; ranges are generated.
        (gen/fmap (comp baseline-to-str remove-accidental-surrogate-pairs))))

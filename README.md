@@ -38,7 +38,7 @@ of code points.
 *   [API documentation](https://glts.github.io/couplet/couplet.core.html)
 *   [Walkthrough](https://github.com/glts/couplet/blob/master/example/walkthrough.clj)
 
-## Design choices
+## Design goals
 
 *   *efficient*: as performant as reasonably possible in Clojure on the JVM
 *   *small*: provide basic building blocks for working with Unicode characters,
