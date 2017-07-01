@@ -135,9 +135,10 @@
 
 (defn- fold-codepoints
   [^CharSequence s start end n combinef reducef]
-  ;; n must be 2 or greater. Otherwise the edge case where (- end start) is 2
-  ;; and the subsequence contains a surrogate pair would recur infinitely.
-  (if (<= (- end start) n)
+  (if (or (<= (- end start) n)
+          (and (= (- end start) 2)
+               (Character/isHighSurrogate (.charAt s start))
+               (Character/isLowSurrogate (.charAt s (inc start)))))
     (reduce reducef (combinef) (->CodePointSeq (.subSequence s start end)))
     (let [split (+ start (quot (- end start) 2))
           split (cond-> split
@@ -150,6 +151,7 @@
       (combinef (fold-codepoints s start split n combinef reducef)
                 (.join task)))))
 
+;; Note that partition size n is based on chars, not code points.
 (extend-type CodePointSeq
   r/CollFold
   (coll-fold [cps n combinef reducef]
@@ -164,8 +166,4 @@
         :else
         (.invoke ^ForkJoinPool @r/pool
                  (fork-join-task
-                   ;; The r/fold contract allows partition size n to be
-                   ;; interpreted as an approximate value. Use 2 as the lower
-                   ;; bound to avoid some awkwardness when folding with
-                   ;; impractical partition size 1.
-                   #(fold-codepoints s 0 (.length s) (max 2 n) combinef reducef)))))))
+                   #(fold-codepoints s 0 (.length s) n combinef reducef)))))))
