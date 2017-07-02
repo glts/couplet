@@ -148,15 +148,15 @@
       (let [s (baseline-to-str (take 10 cps))]
         (is (= (into [] (cp/codepoints s))
                (r/fold into conj (cp/codepoints s))))
-        (is (apply + (cp/codepoints s))
-            (r/fold + (cp/codepoints s)))))
+        (is (= (apply + (cp/codepoints s))
+               (r/fold + (cp/codepoints s))))))
 
     (testing "parallel fold"
       (let [s (baseline-to-str (take 10000 cps))]
         (is (= (into [] (cp/codepoints s))
                (r/fold into conj (cp/codepoints s))))
-        (is (apply + (cp/codepoints s))
-            (r/fold + (cp/codepoints s))))))
+        (is (= (apply + (cp/codepoints s))
+               (r/fold + (cp/codepoints s)))))))
 
   (testing "small partition size"
     (let [s "lem🍋n"]
