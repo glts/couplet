@@ -26,25 +26,26 @@
           (recur (dec i) (cp/append! ret cp) (cptest/high-surrogate? cp)))))))
 
 (defn- format-time
-  [fmt ms]
+  [fmt s]
   (let [format-scaled (fn [scale unit]
-                        (str (format fmt (* scale ms)) unit))]
-    (condp > ms
-      1e-3 (format-scaled 1e6 "ns")
-      1e+0 (format-scaled 1e3 "µs")
-      1e+3 (format-scaled 1e0 "ms")
-      (format-scaled 1e-3 "s"))))
+                        (str (format fmt (* scale s)) unit))]
+    (condp > s
+      1e-6 (format-scaled 1e+9 "ns")
+      1e-3 (format-scaled 1e+6 "µs")
+      1    (format-scaled 1e+3 "ms")
+      (format-scaled 1 "s"))))
 
 (defn- report-tersely
   [name result]
-  (let [{:keys [mean variance outliers]} result
+  (let [{:keys [mean variance outliers execution-count sample-count]} result
         outlier-count (apply + (vals outliers))]
-    (printf "%-48s%s ±%s%s%n"
+    (printf "%5d× %-42s %s±%s%s%n"
+            (* sample-count execution-count)
             name
-            (format-time "%13f" (first mean))
-            (format-time "%.3f" (Math/sqrt (first variance)))
+            (format-time "%7.3f" (first mean))
+            (format-time "%.2f" (Math/sqrt (first variance)))
             (if (pos? outlier-count)
-              (str " (" outlier-count " outliers)")
+              (str " (outliers " outlier-count "/" sample-count ")")
               ""))))
 
 (defmacro benchmarking
@@ -73,15 +74,13 @@
   [s]
   (apply + (map (fn [_] 1) s)))
 
-(defn jdk-char-sequence-code-points-count
-  [^CharSequence s]
-  (.. s codePoints count))
-
 (defn jdk-char-sequence-chars-count
   [^CharSequence s]
   (.. s chars count))
 
-;; Fold
+(defn jdk-char-sequence-code-points-count
+  [^CharSequence s]
+  (.. s codePoints count))
 
 (defn couplet-fold-frequencies
   [s]
@@ -93,6 +92,14 @@
   [s]
   (reduce #(update %1 %2 (fnil inc 0)) {} (cp/codepoints s)))
 
+(defn couplet-to-str
+  [cps]
+  (cp/to-str cps))
+
+(defn clojure-apply-str
+  [chars]
+  (apply str chars))
+
 (defn -main
   [& args]
   (let [text (generate-text 1e6)]
@@ -101,10 +108,18 @@
       (couplet-lazy-codepoints-count text)
       (clojure-char-count text)
       (clojure-lazy-char-count text)
-      (jdk-char-sequence-code-points-count text)
-      (jdk-char-sequence-chars-count text))
+      (jdk-char-sequence-chars-count text)
+      (jdk-char-sequence-code-points-count text))
 
     (benchmarking "Fold"
       (couplet-fold-frequencies text)
       (couplet-reduce-frequencies text))
-    ))
+    )
+
+  (let [text (generate-text 1e6)
+        cps (into [] (cp/codepoints text))
+        chars (into [] text)]
+    (benchmarking "Accumulation to string"
+      (couplet-to-str cps)
+      (clojure-apply-str chars)))
+  )
