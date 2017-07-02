@@ -25,37 +25,43 @@
           (recur i ret true)
           (recur (dec i) (cp/append! ret cp) (cptest/high-surrogate? cp)))))))
 
-(defn- format-time
-  [fmt s]
-  (let [format-scaled (fn [scale unit]
-                        (str (format fmt (* scale s)) unit))]
-    (condp > s
-      1e-6 (format-scaled 1e+9 "ns")
-      1e-3 (format-scaled 1e+6 "µs")
-      1    (format-scaled 1e+3 "ms")
-      (format-scaled 1 "s"))))
+(defn generate-ascii-string
+  "Generates a string of length n containing only ASCII characters."
+  [n]
+  {:post [(== n (count %))
+          (every? #(s/valid? ::cptest/ascii %) (cp/codepoints %))]}
+  (cp/to-str (repeatedly n #(gen/generate (s/gen ::cptest/ascii)))))
 
-(defn- report-tersely
+(defn- format-execution-time
+  [mean stddev]
+  (let [fmt (fn [scale unit]
+              (format "%7.3f%s±%.2f" (* scale mean) unit (* scale stddev)))]
+    (condp > mean
+      1e-6 (fmt 1e+9 "ns")
+      1e-3 (fmt 1e+6 "µs")
+      1    (fmt 1e+3 "ms")
+      (fmt 1 "s"))))
+
+(defn- report-oneline
   [name result]
   (let [{:keys [mean variance outliers execution-count sample-count]} result
         outlier-count (apply + (vals outliers))]
-    (printf "%5d× %-42s %s±%s%s%n"
+    (printf "%5d× %-42s %s%s%n"
             (* sample-count execution-count)
             name
-            (format-time "%7.3f" (first mean))
-            (format-time "%.2f" (Math/sqrt (first variance)))
+            (format-execution-time (first mean) (Math/sqrt (first variance)))
             (if (pos? outlier-count)
               (str " (outliers " outlier-count "/" sample-count ")")
               ""))))
 
 (defmacro benchmarking
-  "Runs benchmarks for exprs, printing the results in terse, one-line format to
-  *out* under the heading given as topic."
+  "Runs benchmarks for exprs, printing the results in one-line format to *out*
+  under the heading given as topic."
   [topic & exprs]
   `(do (newline)
        (println ~topic)
        ~@(map (fn [[n :as expr]]
-                `(report-tersely ~(name n) (benchmark ~expr {})))
+                `(report-oneline ~(name n) (benchmark ~expr {})))
               exprs)))
 
 (defn couplet-codepoints-count
@@ -83,10 +89,15 @@
   (.. s codePoints count))
 
 (defn couplet-fold-frequencies
-  [s]
-  (let [update-freqs #(update %1 %2 (fnil inc 0))
-        merge-freqs (r/monoid (partial merge-with +) hash-map)]
-    (r/fold 8192 merge-freqs update-freqs (cp/codepoints s))))
+  ([n s]
+   (let [update-freqs #(update %1 %2 (fnil inc 0))
+         merge-freqs (r/monoid (partial merge-with +) hash-map)]
+     (r/fold n merge-freqs update-freqs (cp/codepoints s)))))
+
+(defn couplet-fold-frequencies-256 [s] (couplet-fold-frequencies 256 s))
+(defn couplet-fold-frequencies-2048 [s] (couplet-fold-frequencies 2048 s))
+(defn couplet-fold-frequencies-8192 [s] (couplet-fold-frequencies 8192 s))
+(defn couplet-fold-frequencies-131072 [s] (couplet-fold-frequencies 131072 s))
 
 (defn couplet-reduce-frequencies
   [s]
@@ -100,26 +111,38 @@
   [chars]
   (apply str chars))
 
+(def ^:private generators {"text"  generate-text
+                           "ASCII" generate-ascii-string})
+
 (defn -main
   [& args]
-  (let [text (generate-text 1e6)]
-    (benchmarking "Linear count"
-      (couplet-codepoints-count text)
-      (couplet-lazy-codepoints-count text)
-      (clojure-char-count text)
-      (clojure-lazy-char-count text)
-      (jdk-char-sequence-chars-count text)
-      (jdk-char-sequence-code-points-count text))
+  (doseq [[description generate] generators]
+    (let [s (generate 1e6)]
+      (benchmarking (str "Reduce/iterate " description)
+        (couplet-codepoints-count s)
+        (couplet-lazy-codepoints-count s)
+        (clojure-char-count s)
+        (clojure-lazy-char-count s)
+        (jdk-char-sequence-chars-count s)
+        (jdk-char-sequence-code-points-count s))))
 
+  (let [s (generate-text 1e6)]
     (benchmarking "Fold"
-      (couplet-fold-frequencies text)
-      (couplet-reduce-frequencies text))
-    )
+      (couplet-fold-frequencies 8192 s)
+      (couplet-reduce-frequencies s)))
 
-  (let [text (generate-text 1e6)
-        cps (into [] (cp/codepoints text))
-        chars (into [] text)]
-    (benchmarking "Accumulation to string"
-      (couplet-to-str cps)
-      (clojure-apply-str chars)))
+  (let [s (generate-text 1e6)]
+    (benchmarking "Fold with different partition sizes"
+      (couplet-fold-frequencies-256 s)
+      (couplet-fold-frequencies-2048 s)
+      (couplet-fold-frequencies-8192 s)
+      (couplet-fold-frequencies-131072 s)))
+
+  (doseq [[description generate] generators]
+    (let [s (generate 1e6)
+          cps (into [] (cp/codepoints s))
+          chars (into [] s)]
+      (benchmarking (str "Accumulate " description " string")
+        (couplet-to-str cps)
+        (clojure-apply-str chars))))
   )
