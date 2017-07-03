@@ -46,7 +46,7 @@
   [name result]
   (let [{:keys [mean variance outliers execution-count sample-count]} result
         outlier-count (apply + (vals outliers))]
-    (printf "%5d× %-42s %s%s%n"
+    (printf "%6d× %-40s %s%s%n"
             (* sample-count execution-count)
             name
             (format-execution-time (first mean) (Math/sqrt (first variance)))
@@ -111,7 +111,15 @@
   [chars]
   (apply str chars))
 
-(def ^:private generators {"text"  generate-text
+(defn couplet-to-str-with-filter
+  [cps]
+  (cp/to-str (remove cptest/high-surrogate?) cps))
+
+(defn clojure-apply-str-with-filter
+  [chars]
+  (apply str (remove #(cptest/high-surrogate? (int %)) chars)))
+
+(def ^:private generators {"mixed text" generate-text
                            "ASCII" generate-ascii-string})
 
 (defn -main
@@ -126,17 +134,17 @@
         (jdk-char-sequence-chars-count s)
         (jdk-char-sequence-code-points-count s))))
 
-  (let [s (generate-text 1e6)]
+  (let [text (generate-text 1e6)]
     (benchmarking "Fold"
-      (couplet-fold-frequencies 8192 s)
-      (couplet-reduce-frequencies s)))
+      (couplet-fold-frequencies 8192 text)
+      (couplet-reduce-frequencies text)))
 
-  (let [s (generate-text 1e6)]
+  (let [text (generate-text 1e6)]
     (benchmarking "Fold with different partition sizes"
-      (couplet-fold-frequencies-256 s)
-      (couplet-fold-frequencies-2048 s)
-      (couplet-fold-frequencies-8192 s)
-      (couplet-fold-frequencies-131072 s)))
+      (couplet-fold-frequencies-256 text)
+      (couplet-fold-frequencies-2048 text)
+      (couplet-fold-frequencies-8192 text)
+      (couplet-fold-frequencies-131072 text)))
 
   (doseq [[description generate] generators]
     (let [s (generate 1e6)
@@ -144,5 +152,7 @@
           chars (into [] s)]
       (benchmarking (str "Accumulate " description " string")
         (couplet-to-str cps)
-        (clojure-apply-str chars))))
+        (clojure-apply-str chars)
+        (couplet-to-str-with-filter cps)
+        (clojure-apply-str-with-filter chars))))
   )
