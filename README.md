@@ -59,7 +59,9 @@ library for Unicode.
 
 Run the included benchmarks with
 
-    lein do clean, trampoline with-profile +benchmark run
+    lein trampoline with-profile +benchmark run
+
+(Warning: this can easily take half an hour.)
 
 ## Licence
 
