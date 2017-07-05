@@ -111,7 +111,7 @@
   [chars]
   (apply str chars))
 
-(defn couplet-to-str-with-filter
+(defn couplet-to-str-with-transducer
   [cps]
   (cp/to-str (remove cptest/high-surrogate?) cps))
 
@@ -153,6 +153,6 @@
       (benchmarking (str "Accumulate " description " string")
         (couplet-to-str cps)
         (clojure-apply-str chars)
-        (couplet-to-str-with-filter cps)
+        (couplet-to-str-with-transducer cps)
         (clojure-apply-str-with-filter chars))))
   )
