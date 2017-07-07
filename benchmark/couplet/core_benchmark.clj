@@ -89,10 +89,10 @@
   (.. s codePoints count))
 
 (defn couplet-fold-frequencies
-  ([n s]
-   (let [update-freqs #(update %1 %2 (fnil inc 0))
-         merge-freqs (r/monoid (partial merge-with +) hash-map)]
-     (r/fold n merge-freqs update-freqs (cp/codepoints s)))))
+  [n s]
+  (let [update-freqs #(update %1 %2 (fnil inc 0))
+        merge-freqs (r/monoid (partial merge-with +) hash-map)]
+    (r/fold n merge-freqs update-freqs (cp/codepoints s))))
 
 (defn couplet-fold-frequencies-256 [s] (couplet-fold-frequencies 256 s))
 (defn couplet-fold-frequencies-2048 [s] (couplet-fold-frequencies 2048 s))
@@ -154,5 +154,4 @@
         (couplet-to-str cps)
         (clojure-apply-str chars)
         (couplet-to-str-with-transducer cps)
-        (clojure-apply-str-with-filter chars))))
-  )
+        (clojure-apply-str-with-filter chars)))))
