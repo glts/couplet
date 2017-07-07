@@ -48,11 +48,15 @@ of code points.
 
 ## Related work
 
+There are other solutions of the same problem, though perhaps written with
+different goals in mind.
+
 *   https://github.com/richhickey/clojure-contrib/blob/master/src/main/clojure/clojure/contrib/string.clj
 *   https://github.com/daveyarwood/djy
 *   https://github.com/jafingerhut/text.unicode
+*   https://lambdaisland.com/blog/12-06-2017-clojure-gotchas-surrogate-pairs
 
-See also [ICU](http://site.icu-project.org/) for an extensive, mature Java
+Check out [ICU](http://site.icu-project.org/) for an extensive, mature Java
 library for Unicode.
 
 ## Performance
