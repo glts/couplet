@@ -86,7 +86,10 @@
 
 (defmacro codepoint-in
   "Returns a spec that validates code points in the range from start to end
-  inclusive."
+  inclusive.
+
+  See also the predefined spec :couplet.core/codepoint, which validates all code
+  points."
   [start end]
   `(s/spec #(s/int-in-range? ~start (inc ~end) %)
      :gen #(gen/fmap int (gen/choose ~start ~end))))
