@@ -12,9 +12,10 @@
   generator (and avoiding introducing accidental supplementary code points)."
   [n]
   {:post [(== n (-> % cp/codepoints seq count))
-          (->> (cp/codepoints %)
-               (filter #(Character/isSupplementaryCodePoint %))
-               (every? #(s/valid? ::cptest/emoji %)))]}
+          (every? #(s/valid? (s/or :ascii ::cptest/ascii
+                                   :emoji ::cptest/emoji
+                                   :surrogate ::cptest/surrogate) %)
+                  (cp/codepoints %))]}
   (loop [i n
          ret (cp/append!)
          seen-high-surrogate? false]
