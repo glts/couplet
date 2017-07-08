@@ -89,6 +89,10 @@
   [^CharSequence s]
   (.. s codePoints count))
 
+(defn couplet-folding-codepoints-count
+  [s]
+  (r/fold 8192 + (fn [n _] (inc n)) (cp/codepoints s)))
+
 (defn couplet-fold-frequencies
   [n s]
   (let [update-freqs #(update %1 %2 (fnil inc 0))
@@ -104,17 +108,44 @@
   [s]
   (reduce #(update %1 %2 (fnil inc 0)) {} (cp/codepoints s)))
 
+(defn- ascii? [cp]
+  (<= 0 cp 127))
+
+(defn- fold-into-set [coll]
+  (r/fold 8192 (r/monoid into hash-set) conj coll))
+
+(defn couplet-reducer-foldcat
+  [s]
+  (let [intermediate-coll (->> (cp/codepoints s)
+                               (r/filter ascii?)
+                               (r/fold 8192 r/cat r/append!))]
+    ((juxt count fold-into-set) intermediate-coll)))
+
+(defn couplet-reducer-fold-combining
+  [s]
+  (let [intermediate-coll (->> (cp/codepoints s)
+                               (r/filter ascii?)
+                               (r/fold 8192 into conj))]
+    ((juxt count fold-into-set) intermediate-coll)))
+
+(defn couplet-reducer-sequential
+  [s]
+  (let [intermediate-coll (->> (cp/codepoints s)
+                               (r/filter ascii?)
+                               (into []))]
+    ((juxt count fold-into-set) intermediate-coll)))
+
 (defn couplet-to-str
   [cps]
   (cp/to-str cps))
 
-(defn clojure-apply-str
-  [chars]
-  (apply str chars))
-
 (defn couplet-to-str-with-transducer
   [cps]
   (cp/to-str (remove cptest/high-surrogate?) cps))
+
+(defn clojure-apply-str
+  [chars]
+  (apply str chars))
 
 (defn clojure-apply-str-with-filter
   [chars]
@@ -137,6 +168,7 @@
 
   (let [text (generate-text 1e6)]
     (benchmarking "Fold"
+      (couplet-folding-codepoints-count text)
       (couplet-fold-frequencies 8192 text)
       (couplet-reduce-frequencies text)))
 
@@ -147,12 +179,18 @@
       (couplet-fold-frequencies-8192 text)
       (couplet-fold-frequencies-131072 text)))
 
+  (let [text (generate-text 1e6)]
+    (benchmarking "Fold reducer"
+      (couplet-reducer-foldcat text)
+      (couplet-reducer-fold-combining text)
+      (couplet-reducer-sequential text)))
+
   (doseq [[description generate] generators]
     (let [s (generate 1e6)
           cps (into [] (cp/codepoints s))
           chars (into [] s)]
       (benchmarking (str "Accumulate " description " string")
         (couplet-to-str cps)
-        (clojure-apply-str chars)
         (couplet-to-str-with-transducer cps)
+        (clojure-apply-str chars)
         (clojure-apply-str-with-filter chars)))))
