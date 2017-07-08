@@ -155,7 +155,7 @@
                            "ASCII" generate-ascii-string})
 
 (defn -main
-  [& args]
+  [& _]
   (doseq [[description generate] generators]
     (let [s (generate 1e6)]
       (benchmarking (str "Reduce/iterate " description)

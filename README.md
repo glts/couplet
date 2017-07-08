@@ -48,12 +48,11 @@ of code points.
 
 ## Related work
 
-There are other solutions of the same problem, though perhaps written with
+There are other solutions for the same problem, though perhaps written with
 different goals in mind.
 
 *   https://github.com/richhickey/clojure-contrib/blob/master/src/main/clojure/clojure/contrib/string.clj
 *   https://github.com/daveyarwood/djy
-*   https://github.com/jafingerhut/text.unicode
 *   https://lambdaisland.com/blog/12-06-2017-clojure-gotchas-surrogate-pairs
 
 Check out [ICU](http://site.icu-project.org/) for an extensive, mature Java
@@ -66,6 +65,11 @@ Run the included benchmarks with
     lein trampoline with-profile +benchmark run
 
 (Warning: this can easily take half an hour.)
+
+Broadly speaking, processing strings using code points instead of `char`s has no
+negative impact on performance. On the contrary, at the time of writing the
+performance achieved here compares favourably with that of Clojure’s own
+`char`-based string processing.
 
 ## Licence
 
