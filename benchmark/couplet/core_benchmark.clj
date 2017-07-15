@@ -73,6 +73,49 @@
   [s]
   (apply + (map (fn [_] 1) (cp/codepoints s))))
 
+(defn- lazy-codepoints
+  [^CharSequence s]
+  (let [cpseq (fn cpseq [i]
+                (lazy-seq
+                  (when (< i (.length s))
+                    (let [c1 (.charAt s i)
+                          i (inc i)]
+                      (if (and (Character/isHighSurrogate c1)
+                               (< i (.length s))
+                               (Character/isLowSurrogate (.charAt s i)))
+                        (cons (Character/toCodePoint c1 (.charAt s i)) (cpseq (inc i)))
+                        (cons (int c1) (cpseq i)))))))]
+    (cpseq 0)))
+
+(defn couplet-pure-lazy-codepoints-count
+  [s]
+  (apply + (map (fn [_] 1) (lazy-codepoints s))))
+
+(defn- chunked-codepoints
+  [^CharSequence s]
+  (let [cpseq (fn cpseq [i]
+                (lazy-seq
+                  (when (< i (.length s))
+                    (let [buf (chunk-buffer 32)
+                          i (loop [i (int i), j (int 32)]
+                              (if (and (pos? j) (< i (.length s)))
+                                (let [c1 (.charAt s i)
+                                      i (inc i)]
+                                  (if (and (Character/isHighSurrogate c1)
+                                           (< i (.length s))
+                                           (Character/isLowSurrogate (.charAt s i)))
+                                    (do (chunk-append buf (Character/toCodePoint c1 (.charAt s i)))
+                                        (recur (inc i) (dec j)))
+                                    (do (chunk-append buf (int c1))
+                                        (recur i (dec j)))))
+                                i))]
+                      (chunk-cons (chunk buf) (cpseq i))))))]
+    (cpseq 0)))
+
+(defn couplet-chunked-lazy-codepoints-count
+  [s]
+  (apply + (map (fn [_] 1) (chunked-codepoints s))))
+
 (defn clojure-char-count
   [s]
   (reduce (fn [n _] (inc n)) 0 s))
@@ -161,6 +204,8 @@
       (benchmarking (str "Reduce/iterate " description)
         (couplet-codepoints-count s)
         (couplet-lazy-codepoints-count s)
+        (couplet-pure-lazy-codepoints-count s)
+        (couplet-chunked-lazy-codepoints-count s)
         (clojure-char-count s)
         (clojure-lazy-char-count s)
         (jdk-char-sequence-chars-count s)
