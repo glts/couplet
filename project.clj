@@ -14,7 +14,7 @@
                          :jvm-opts ^:replace []}}
 
   ;; Adjust Leiningen's JAR build output: do not declare a Main-Class or leak
-  ;; the login name in the manifest, and omit unnecessarily included files.
+  ;; the login name in the manifest, and omit unnecessarily included file.
   :main nil
-  :jar-exclusions [#"^project\.clj$" #"^META-INF/maven/"]
+  :jar-exclusions [#"^project\.clj$"]
   :manifest {"Built-By" "David Bürgin"})

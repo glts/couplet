@@ -40,9 +40,9 @@ of code points.
 
 ## Design goals
 
-*   *efficient*: as performant as reasonably possible in Clojure on the JVM
 *   *small*: provide basic building blocks for working with Unicode characters,
     not more
+*   *efficient*: as performant as reasonably possible in Clojure on the JVM
 *   *transparent*: allow processing any string, no well-formedness requirement
     imposed or exception thrown on ill-formed UTF-16 input
 
