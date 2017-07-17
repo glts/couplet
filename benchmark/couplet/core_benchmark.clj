@@ -4,7 +4,8 @@
             [clojure.spec.gen.alpha :as gen]
             [criterium.core :refer :all]
             [couplet.core :as cp]
-            [couplet.core-test :as cptest]))
+            [couplet.core-test :as cptest])
+  (:gen-class))
 
 (defn generate-text
   "Generates a string that consists of exactly n code points, with frequencies
@@ -136,10 +137,12 @@
   [s]
   (r/fold 8192 + (fn [n _] (inc n)) (cp/codepoints s)))
 
+(defn- update-freqs [freqs k]
+  (update freqs k (fnil inc 0)))
+
 (defn couplet-fold-frequencies
   [n s]
-  (let [update-freqs #(update %1 %2 (fnil inc 0))
-        merge-freqs (r/monoid (partial merge-with +) hash-map)]
+  (let [merge-freqs (r/monoid (partial merge-with +) hash-map)]
     (r/fold n merge-freqs update-freqs (cp/codepoints s))))
 
 (defn couplet-fold-frequencies-256 [s] (couplet-fold-frequencies 256 s))
@@ -149,7 +152,7 @@
 
 (defn couplet-reduce-frequencies
   [s]
-  (reduce #(update %1 %2 (fnil inc 0)) {} (cp/codepoints s)))
+  (reduce update-freqs {} (cp/codepoints s)))
 
 (defn- ascii? [cp]
   (<= 0 cp 127))
