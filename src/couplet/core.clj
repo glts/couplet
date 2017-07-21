@@ -2,8 +2,8 @@
   "Unicode code points support for Clojure.
 
   Couplet provides support for treating CharSequences (such as strings) as
-  sequences of Unicode code points instead of the usual JVM treatment as chars,
-  that is as UTF-16 code unit values."
+  sequences of Unicode characters or 'code points'. It includes a few additional
+  utilities to make working with code points a little more pleasant."
   (:require [clojure.core.protocols :refer [CollReduce]]
             [clojure.core.reducers :as r]
             [clojure.spec.alpha :as s]
@@ -67,8 +67,8 @@
   CharSequence s.
 
   The result is of type couplet.core.CodePointSeq, a type which is seqable,
-  reducible, and foldable. The wrapped CharSequence is treated as
-  immutable (like a string).
+  reducible, and foldable. The wrapped CharSequence is treated as immutable (like
+  a string).
 
   Unlike CharSequence, CodePointSeq is not counted? and does not support random
   access. Use seq to obtain a regular (lazy) seq of code points."
@@ -79,8 +79,7 @@
 (defn codepoint?
   "Returns true if x is a code point.
 
-  See also the spec :couplet.core/codepoint, which has an associated
-  generator."
+  See also the spec :couplet.core/codepoint, which has an associated generator."
   [x]
   (and (int? x) (<= Character/MIN_CODE_POINT x Character/MAX_CODE_POINT)))
 
@@ -98,8 +97,7 @@
   (codepoint-in Character/MIN_CODE_POINT Character/MAX_CODE_POINT))
 
 (defn codepoint-str
-  "Returns a string containing the Unicode character specified by code point
-  cp."
+  "Returns a string containing the Unicode character specified by code point cp."
   [cp]
   (String/valueOf (Character/toChars cp)))
 
@@ -125,8 +123,8 @@
   result.
 
   This is a convenience function around reduce/transduce with reducing function
-  append!, so coll must either directly or by way of transformation through
-  xform consist of Unicode code points."
+  append!, so coll must either directly or by way of transformation through xform
+  consist of Unicode code points."
   ([coll]
    (to-str identity coll))
   ([xform coll]

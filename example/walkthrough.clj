@@ -6,9 +6,9 @@
 ;; Namespace
 
 ;; We begin by requiring the main namespace, couplet.core, aliasing it as 'cp'.
-;; For this walkthrough, we also :refer the few functions from that namespace
-;; for convenience. The names have been chosen so that both namespace aliasing
-;; and referring can be used, according with your preference.
+;; Just for this walkthrough, let's also :refer the few functions from that
+;; namespace. The names have been chosen such that both namespace aliasing and
+;; referring can be used, according with your preference.
 (require '[couplet.core :as cp :refer :all])
 
 
@@ -25,8 +25,8 @@
 (seq (codepoints "bird 🐦"))
 (map type (codepoints "bird 🐦"))
 
-;; Because the meaning of code point integers is opaque, this library provides
-;; 'codepoint-str' to go back from an integer to a string.
+;; The meaning of code point integers is opaque, so there must be a way of
+;; getting back from the integer to the string: 'codepoint-str' does that.
 (run! (comp println codepoint-str) (codepoints "bird 🐦"))
 
 ;; If you are not familiar with Unicode character processing on the JVM, you
@@ -36,12 +36,12 @@
 ;; Unicode characters, but not for some characters of some writing systems of
 ;; the world, including, notably, emoji. Those need to be represented as two
 ;; chars, a pair of so-called 'surrogate' code units.
+;;
+;; Clojure inherits the char-based string handling of its host. For many
+;; operations (map, filter, reverse, count) this behaviour is inadequate; hence
+;; the need for a library like Couplet. A quick illustration follows.
 
-;; Thus, Clojure's string handling is based on chars, that is UTF-16 code units,
-;; not Unicode code points. For many operations like map, filter, reverse, count
-;; this behaviour is inadequate.
-
-;; Compare. Plain strings:
+;; Plain strings:
 (seq "bird 🐦")
 (count "bird 🐦")
 (reverse "bird 🐦")
@@ -58,18 +58,18 @@
 ;; Couplet provides just the most basic functionality: turn a string into a
 ;; sequence of code points, and gather them up into a string again. That latter
 ;; part is covered by 'to-str', shown in the last example above. 'to-str' also
-;; accepts a transducer that lets you filter or map any inputs. For example, we
-;; may want to retain only supplementary code points.
+;; accepts a transducer that lets you transform any input. For example, we may
+;; want to retain only supplementary code points.
 (to-str (filter #(Character/isSupplementaryCodePoint %))
         (codepoints "bird 🐦"))
 
-;; Any transformation done between obtaining the code point sequence and turning
-;; it back into a string is up to you: you can filter, map, or otherwise
-;; transform the sequence like any other sequence.
+;; Any transformation done between obtaining the sequence of code point values
+;; and coercing them into the desired shape is up to you: you can filter, map,
+;; or otherwise transform the sequence like any other sequence.
 
 ;; By design, this library is small, and you are expected to make carefree use
-;; of the rich Unicode APIs in the JDK, such as java.lang.Character, to create
-;; the utilities that you need yourself.
+;; of the rich Unicode APIs in the JDK such as java.lang.Character to create the
+;; utilities that you need for your job.
 
 (defn unicode-block [cp]
   (java.lang.Character$UnicodeBlock/of cp))
@@ -102,7 +102,7 @@
 (defn surrogate? [cp]
   (and (Character/isBmpCodePoint cp) (Character/isSurrogate (char cp))))
 
-(not-any? surrogate? (codepoints "abc\ud930def"))
+(not-any? surrogate? (codepoints "abc\ud930def"))  ; U+D930 is a surrogate
 
 ;; Or you may choose to replace surrogates with the U+FFFD replacement
 ;; character. Such decisions are up to.
@@ -115,13 +115,13 @@
 
 ;; Fast reduction
 
-;; The nice thing about having a custom type to represent a sequence of code
-;; points is that it allows Couplet to extend this type to some core protocols
-;; to achieve good performance.
+;; The nice thing about having a custom type represent a sequence of code points
+;; is that it allows that type to be extended to some core Clojure protocols to
+;; achieve good performance.
 
 ;; First, CodePointSeq is reducible, that is, reducing a CodePointSeq is fast,
 ;; faster than iterating over a lazy seq of code points. Let's show the
-;; performance difference with a large input string. First we will introduce a
+;; performance difference for a large input string. First let us introduce a
 ;; sample string generator, and then use that to generate a large string.
 
 (defn generate-text [n]
@@ -136,10 +136,6 @@
 ;; faster than the lazy one (up to 3x according to the benchmarks).
 (time (into #{} (seq (codepoints large-string))))
 (time (into #{} (codepoints large-string)))
-
-;; As an interesting performance side note, it is also somewhat faster than the
-;; same for a plain string.
-(time (into #{} large-string))
 
 
 ;; Fast parallel folding
@@ -164,17 +160,15 @@
   ([] {})
   ([m1 m2] (merge-with + m1 m2)))
 
-(let [s (to-str (repeatedly 1e6 #(rand-int 0x1FFFF)))]
-  (time (->> (codepoints s)
-             (reduce update-frequencies {})
-             (sort-by val >)
-             (take 5)
-             (run! println)))
-  (time (->> (codepoints s)
-             (r/fold 8192 merge-frequencies update-frequencies)
-             (sort-by val >)
-             (take 5)
-             (run! println))))
+(let [one-million-cps (to-str (repeatedly 1e6 #(rand-int 0x1FFFF)))]
+  (doseq [reduce-or-fold
+          [(fn [s] (reduce update-frequencies {} s))
+           (fn [s] (r/fold 8192 merge-frequencies update-frequencies s))]]
+    (time (->> (codepoints one-million-cps)
+               reduce-or-fold
+               (sort-by val >)
+               (take 5)
+               (run! println)))))
 
 ;; On my machine, the speedup afforded by r/fold approaches 3x.
 
