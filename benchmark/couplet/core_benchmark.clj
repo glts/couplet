@@ -2,10 +2,9 @@
   (:require [clojure.core.reducers :as r]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [criterium.core :refer :all]
+            [criterium.core :refer [benchmark]]
             [couplet.core :as cp]
-            [couplet.core-test :as cptest])
-  (:gen-class))
+            [couplet.core-test :as cptest]))
 
 (defn generate-text
   "Generates a string that consists of exactly n code points, with frequencies
@@ -19,11 +18,11 @@
                   (cp/codepoints %))]}
   (loop [i n
          ret (cp/append!)
-         seen-high-surrogate? false]
+         high-surrogate-seen? false]
     (if (zero? i)
       (cp/append! ret)
       (let [cp (gen/generate cptest/gen-weighted-codepoints)]
-        (if (and seen-high-surrogate? (cptest/low-surrogate? cp))
+        (if (and high-surrogate-seen? (cptest/low-surrogate? cp))
           (recur i ret true)
           (recur (dec i) (cp/append! ret cp) (cptest/high-surrogate? cp)))))))
 
