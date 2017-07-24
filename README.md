@@ -44,7 +44,7 @@ of code points.
     not more
 *   *efficient*: as performant as reasonably possible in Clojure on the JVM
 *   *transparent*: allow processing any string, no well-formedness requirement
-    imposed or exception thrown on ill-formed UTF-16 input
+    imposed, no exceptions thrown nor mangling done on ill-formed UTF-16 input
 
 ## Related work
 

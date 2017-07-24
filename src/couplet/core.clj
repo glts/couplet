@@ -12,6 +12,37 @@
            [java.io Writer]
            [java.util.concurrent Callable ForkJoinPool ForkJoinTask]))
 
+(defn- codepoint-xform
+  [rf]
+  (let [high (volatile! nil)]
+    (fn
+      ([] (rf))
+      ([result]
+       (rf (if-let [c @high]
+             (unreduced (rf result (int c)))
+             result)))
+      ([result c]
+       (if-let [c1 @high]
+         (cond
+           (Character/isLowSurrogate c)
+           (do (vreset! high nil)
+               (rf result (Character/toCodePoint c1 c)))
+           (Character/isHighSurrogate c)
+           (let [result (rf result (int c1))]
+             ;; Must discard state when reduced, required by completion.
+             (vreset! high (if (reduced? result) nil c))
+             result)
+           :else
+           (do (vreset! high nil)
+               (let [result (rf result (int c1))]
+                 (if (reduced? result)
+                   result
+                   (rf result (int c))))))
+         (if (Character/isHighSurrogate c)
+           (do (vreset! high c)
+               result)
+           (rf result (int c))))))))
+
 (defn- codepoint-reduce
   [^CharSequence s i f val]
   (loop [i (int i)
@@ -64,17 +95,19 @@
 
 (defn codepoints
   "Returns a value that acts like a sequence of code points, wrapping the given
-  CharSequence s.
-
-  The result is of type couplet.core.CodePointSeq, a type which is seqable,
-  reducible, and foldable. The wrapped CharSequence is treated as immutable (like
-  a string).
+  CharSequence s. The result is of type couplet.core.CodePointSeq, a type which is
+  seqable, reducible, and foldable. The wrapped CharSequence is treated as
+  immutable (like a string).
 
   Unlike CharSequence, CodePointSeq is not counted? and does not support random
-  access. Use seq to obtain a regular (lazy) seq of code points."
-  [s]
-  {:pre [(some? s)]}
-  (->CodePointSeq s))
+  access. Use seq to obtain a regular (lazy) seq of code points.
+
+  When no argument is supplied, returns a stateful transducer that transforms char
+  inputs to code points."
+  ([] codepoint-xform)
+  ([s]
+   {:pre [(some? s)]}
+   (->CodePointSeq s)))
 
 (defn codepoint?
   "Returns true if x is a code point.
@@ -130,8 +163,7 @@
   ([xform coll]
    (transduce xform append! coll)))
 
-(defn- fork-join-task
-  ^ForkJoinTask [^Callable f]
+(defn- fork-join-task ^ForkJoinTask [^Callable f]
   (ForkJoinTask/adapt f))
 
 (defn- fold-codepoints

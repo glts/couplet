@@ -99,6 +99,49 @@
     (= (reduce conj [] (baseline-codepoints s))
        (reduce conj [] (cp/codepoints s)))))
 
+(defn- conj-taking [n]
+  (let [i (atom n)]
+    (fn
+      ([] [])
+      ([result]
+       {:pre [(not (reduced? result))]}
+       result)
+      ([result input]
+       {:pre [(not (reduced? result))
+              (pos? @i)]}
+       (if (zero? (swap! i dec))
+         (reduced (conj result input))
+         (conj result input))))))
+
+(deftest codepoints-transducer-succeeds
+  (testing "transform char inputs"
+    (is (= [(int \a) (int \b) (int \c)]
+           (transduce (cp/codepoints) conj "abc")))
+    (is (= [0x1F528 0x1F339 0x1F483]
+           (transduce (cp/codepoints) conj "🔨🌹💃")))
+    (is (= [0xD83D]
+           (transduce (cp/codepoints) conj "\ud83d"))))
+
+  (testing "reducing function not called in completion when reduced"
+    (is (= [0xD83D]
+           (transduce (cp/codepoints) (conj-taking 1) [] "\ud83d\ud83d"))))
+
+  (testing "completion arity unreduces reduced value"
+    (is (= [0xD83D]
+           (transduce (cp/codepoints) (conj-taking 1) [] "\ud83d")))))
+
+(defspec sequence-from-codepoints-transducer-equals-baseline
+  (for-all [s gen-text]
+    (= (sequence (baseline-codepoints s))
+       (sequence (cp/codepoints) s))))
+
+(defspec codepoints-transducer-handles-reduced-results
+  (for-all [s gen-text
+            n gen/s-pos-int]
+    (= (vec (take n (baseline-codepoints s)))
+       (transduce (comp (cp/codepoints) (take n)) conj s)
+       (transduce (cp/codepoints) (conj-taking n) s))))
+
 (deftest codepoint-seq-print-method-prints-readably
   (let [s "star🌟"
         cps (read-string (pr-str (cp/codepoints s)))]

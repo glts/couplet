@@ -69,6 +69,10 @@
   [s]
   (reduce (fn [n _] (inc n)) 0 (cp/codepoints s)))
 
+(defn couplet-transducing-codepoints-count
+  [s]
+  (transduce (cp/codepoints) (completing (fn [n _] (inc n))) 0 s))
+
 (defn couplet-lazy-codepoints-count
   [s]
   (apply + (map (fn [_] 1) (cp/codepoints s))))
@@ -205,6 +209,7 @@
     (let [s (generate 1e6)]
       (benchmarking (str "Reduce/iterate " description)
         (couplet-codepoints-count s)
+        (couplet-transducing-codepoints-count s)
         (couplet-lazy-codepoints-count s)
         (couplet-pure-lazy-codepoints-count s)
         (couplet-chunked-lazy-codepoints-count s)

@@ -86,6 +86,10 @@
 ;; ... reduce.
 (codepoint-str (reduce max -1 (codepoints "h🌝llo")))
 
+;; One more thing about 'codepoints': in those rare situations where you're
+;; dealing with chars that don't come as a CharSequence, use the transducer:
+(sequence (codepoints) (char-array "bird 🐦"))
+
 
 ;; Validation
 
