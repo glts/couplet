@@ -77,8 +77,8 @@ At the time of writing, the following rough performance figures hold.
 *   Reduce is faster than processing a lazy seq of code points by a factor of 3.
 *   Parallel fold is faster than reduce by a factor proportional to the number
     of cores.
-*   Compared with Clojure, performance differences range from on par (reducing
-    code points versus reducing a string) to faster by a factor of 3
+*   Compared with Clojure strings, performance differences range from on par
+    (reducing code points versus reducing a string) to faster by a factor of 3
     (`cp/to-str` versus `apply str`) to faster by a factor of 5 (lazy seq of
     code points versus lazy seq of `char`s).
 
