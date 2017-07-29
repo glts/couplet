@@ -6,15 +6,18 @@
             [couplet.core :as cp]
             [couplet.core-test :as cptest]))
 
+(defmacro some-codepoint [codepoint-spec & more]
+  `(some-fn ~@(map s/form (cons codepoint-spec more))))
+
 (defn generate-text
   "Generates a string that consists of n code points, with frequencies of code
   point kind distributed according to couplet.core-test/gen-weighted-codepoints,
   and avoiding introducing accidental supplementary code points."
   [n]
   {:post [(== n (-> % cp/codepoints seq count))
-          (every? #(s/valid? (s/or :ascii ::cptest/ascii
-                                   :emoji ::cptest/emoji
-                                   :surrogate ::cptest/surrogate) %)
+          (every? (some-codepoint ::cptest/ascii
+                                  ::cptest/emoji
+                                  ::cptest/surrogate)
                   (cp/codepoints %))]}
   (loop [i n
          ret (cp/append!)
@@ -30,7 +33,7 @@
   "Generates a string of length n containing only ASCII characters."
   [n]
   {:post [(== n (count %))
-          (every? #(s/valid? ::cptest/ascii %) (cp/codepoints %))]}
+          (every? (some-codepoint ::cptest/ascii) (cp/codepoints %))]}
   (cp/to-str (repeatedly n #(gen/generate (s/gen ::cptest/ascii)))))
 
 (defn- format-execution-time
