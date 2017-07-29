@@ -68,7 +68,7 @@
 ;; or otherwise transform the sequence like any other sequence.
 
 ;; By design, this library is small, and you are expected to make carefree use
-;; of the rich Unicode APIs in the JDK such as java.lang.Character to create the
+;; of the Unicode APIs in the JDK such as java.lang.Character to create the
 ;; utilities that you need for your job.
 
 (defn unicode-block [cp]

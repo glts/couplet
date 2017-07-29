@@ -7,9 +7,9 @@
             [couplet.core-test :as cptest]))
 
 (defn generate-text
-  "Generates a string that consists of exactly n code points, with frequencies
-  of code point kind according to the couplet.core-test/gen-weighted-codepoints
-  generator (and avoiding introducing accidental supplementary code points)."
+  "Generates a string that consists of n code points, with frequencies of code
+  point kind distributed according to couplet.core-test/gen-weighted-codepoints,
+  and avoiding introducing accidental supplementary code points."
   [n]
   {:post [(== n (-> % cp/codepoints seq count))
           (every? #(s/valid? (s/or :ascii ::cptest/ascii
@@ -34,9 +34,9 @@
   (cp/to-str (repeatedly n #(gen/generate (s/gen ::cptest/ascii)))))
 
 (defn- format-execution-time
-  [mean stddev]
+  [mean sd]
   (let [fmt (fn [scale unit]
-              (format "%7.3f%s±%.2f" (* scale mean) unit (* scale stddev)))]
+              (format "%7.3f%s±%.2f" (* scale mean) unit (* scale sd)))]
     (condp > mean
       1e-6 (fmt 1e+9 "ns")
       1e-3 (fmt 1e+6 "µs")
@@ -91,7 +91,7 @@
                         (cons (int c1) (cpseq i)))))))]
     (cpseq 0)))
 
-(defn couplet-pure-lazy-codepoints-count
+(defn couplet-naive-lazy-codepoints-count
   [s]
   (apply + (map (fn [_] 1) (lazy-codepoints s))))
 
@@ -211,7 +211,7 @@
         (couplet-codepoints-count s)
         (couplet-transducing-codepoints-count s)
         (couplet-lazy-codepoints-count s)
-        (couplet-pure-lazy-codepoints-count s)
+        (couplet-naive-lazy-codepoints-count s)
         (couplet-chunked-lazy-codepoints-count s)
         (clojure-char-count s)
         (clojure-lazy-char-count s)

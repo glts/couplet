@@ -17,6 +17,10 @@ This library targets Clojure on the JVM.
 *   Clojure 1.9
 *   Java 8
 
+## Dependency information
+
+    [ch.gluet/couplet "0.0.4"]
+
 ## Usage
 
 Require the core namespace as `cp`, then use `cp/codepoints` to obtain a seqable

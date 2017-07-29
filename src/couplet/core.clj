@@ -94,7 +94,7 @@
   (print-method (vector (str (.s cps))) w))
 
 (defn codepoints
-  "Returns a value that acts like a sequence of code points, wrapping the given
+  "Returns a value that acts like a sequence of code points from the given
   CharSequence s. The result is of type couplet.core.CodePointSeq, a type which is
   seqable, reducible, and foldable. The wrapped CharSequence is treated as
   immutable (like a string).
