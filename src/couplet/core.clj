@@ -105,13 +105,12 @@
     (case (.length s)
       0 (f)
       1 (int (.charAt s 0))
-      2 (if (and (Character/isHighSurrogate (.charAt s 0))
-                 (Character/isLowSurrogate (.charAt s 1)))
-          (Character/toCodePoint (.charAt s 0) (.charAt s 1))
-          (codepoint-reduce s 1 f (int (.charAt s 0))))
-      (if (and (Character/isHighSurrogate (.charAt s 0))
-               (Character/isLowSurrogate (.charAt s 1)))
-        (codepoint-reduce s 2 f (Character/toCodePoint (.charAt s 0) (.charAt s 1)))
+      (if-let [val (and (Character/isHighSurrogate (.charAt s 0))
+                        (Character/isLowSurrogate (.charAt s 1))
+                        (Character/toCodePoint (.charAt s 0) (.charAt s 1)))]
+        (if (= (.length s) 2)
+          val
+          (codepoint-reduce s 2 f val))
         (codepoint-reduce s 1 f (int (.charAt s 0))))))
   (coll-reduce [_ f val]
     (if (zero? (.length s))
