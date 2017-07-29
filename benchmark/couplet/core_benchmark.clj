@@ -6,7 +6,7 @@
             [couplet.core :as cp]
             [couplet.core-test :as cptest]))
 
-(defmacro some-codepoint [codepoint-spec & more]
+(defmacro ^:private some-codepoint [codepoint-spec & more]
   `(some-fn ~@(map s/form (cons codepoint-spec more))))
 
 (defn generate-text

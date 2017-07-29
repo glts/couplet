@@ -15,16 +15,15 @@
 (defn codepoint?
   "Returns true if x is a code point.
 
-  See also the spec :couplet.core/codepoint, which has an associated generator."
+  Corresponds to the spec :couplet.core/codepoint."
   [x]
   (and (int? x) (<= Character/MIN_CODE_POINT x Character/MAX_CODE_POINT)))
 
 (defmacro codepoint-in
-  "Returns a spec that validates code points in the range from start to end
-  inclusive.
+  "Returns a spec that validates (and generates) code points in the range from
+  start to end inclusive.
 
-  See also the predefined spec :couplet.core/codepoint, which validates all code
-  points."
+  The predefined spec :couplet.core/codepoint validates all code points."
   [start end]
   `(s/spec #(s/int-in-range? ~start (inc ~end) %)
      :gen #(gen/fmap int (gen/choose ~start ~end))))
