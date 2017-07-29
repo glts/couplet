@@ -12,6 +12,37 @@
            [java.io Writer]
            [java.util.concurrent Callable ForkJoinPool ForkJoinTask]))
 
+(defn codepoint?
+  "Returns true if x is a code point.
+
+  See also the spec :couplet.core/codepoint, which has an associated generator."
+  [x]
+  (and (int? x) (<= Character/MIN_CODE_POINT x Character/MAX_CODE_POINT)))
+
+(defmacro codepoint-in
+  "Returns a spec that validates code points in the range from start to end
+  inclusive.
+
+  See also the predefined spec :couplet.core/codepoint, which validates all code
+  points."
+  [start end]
+  `(s/spec #(s/int-in-range? ~start (inc ~end) %)
+     :gen #(gen/fmap int (gen/choose ~start ~end))))
+
+(s/def ::codepoint
+  (codepoint-in Character/MIN_CODE_POINT Character/MAX_CODE_POINT))
+
+(defn codepoint-str
+  "Returns a string containing the Unicode character specified by code point cp."
+  [cp]
+  (String/valueOf (Character/toChars cp)))
+
+(s/fdef codepoint-str
+  :args (s/cat :codepoint ::codepoint)
+  :ret string?
+  :fn #(= (count (:ret %))
+          (if (Character/isBmpCodePoint (-> % :args :codepoint)) 1 2)))
+
 (defn- codepoint-xform
   [rf]
   (let [high (volatile! nil)]
@@ -90,8 +121,10 @@
 
 (defmethod print-method CodePointSeq
   [^CodePointSeq cps ^Writer w]
-  (.write w "#couplet.core.CodePointSeq")
-  (print-method (vector (str (.s cps))) w))
+  (if *print-readably*
+    (do (.write w "#couplet.core.CodePointSeq")
+        (print-method (vector (str (.s cps))) w))
+    (print-method (map codepoint-str cps) w)))
 
 (defn codepoints
   "Returns a value that acts like a sequence of code points from the given
@@ -108,37 +141,6 @@
   ([s]
    {:pre [(some? s)]}
    (->CodePointSeq s)))
-
-(defn codepoint?
-  "Returns true if x is a code point.
-
-  See also the spec :couplet.core/codepoint, which has an associated generator."
-  [x]
-  (and (int? x) (<= Character/MIN_CODE_POINT x Character/MAX_CODE_POINT)))
-
-(defmacro codepoint-in
-  "Returns a spec that validates code points in the range from start to end
-  inclusive.
-
-  See also the predefined spec :couplet.core/codepoint, which validates all code
-  points."
-  [start end]
-  `(s/spec #(s/int-in-range? ~start (inc ~end) %)
-     :gen #(gen/fmap int (gen/choose ~start ~end))))
-
-(s/def ::codepoint
-  (codepoint-in Character/MIN_CODE_POINT Character/MAX_CODE_POINT))
-
-(defn codepoint-str
-  "Returns a string containing the Unicode character specified by code point cp."
-  [cp]
-  (String/valueOf (Character/toChars cp)))
-
-(s/fdef codepoint-str
-  :args (s/cat :codepoint ::codepoint)
-  :ret string?
-  :fn #(= (count (:ret %))
-          (if (Character/isBmpCodePoint (-> % :args :codepoint)) 1 2)))
 
 (defn append!
   "Reducing function applicable to code point input, with accumulation based on
