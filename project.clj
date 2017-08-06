@@ -1,4 +1,4 @@
-(defproject ch.gluet/couplet "0.0.4"
+(defproject ch.gluet/couplet "0.0.5"
   :description "Unicode code points support for Clojure"
   :url "https://github.com/glts/couplet"
   :license {:name "Eclipse Public License"
