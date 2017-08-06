@@ -151,8 +151,7 @@
   (let [merge-freqs (r/monoid (partial merge-with +) hash-map)]
     (r/fold n merge-freqs update-freqs (cp/codepoints s))))
 
-(defn couplet-fold-frequencies-256 [s] (couplet-fold-frequencies 256 s))
-(defn couplet-fold-frequencies-2048 [s] (couplet-fold-frequencies 2048 s))
+(defn couplet-fold-frequencies-512 [s] (couplet-fold-frequencies 512 s))
 (defn couplet-fold-frequencies-8192 [s] (couplet-fold-frequencies 8192 s))
 (defn couplet-fold-frequencies-131072 [s] (couplet-fold-frequencies 131072 s))
 
@@ -229,8 +228,7 @@
 
   (let [text (generate-text 1e6)]
     (benchmarking "Fold with different partition sizes"
-      (couplet-fold-frequencies-256 text)
-      (couplet-fold-frequencies-2048 text)
+      (couplet-fold-frequencies-512 text)
       (couplet-fold-frequencies-8192 text)
       (couplet-fold-frequencies-131072 text)))
 

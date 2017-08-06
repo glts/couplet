@@ -3,7 +3,7 @@
 
   Couplet provides support for treating CharSequences (such as strings) as
   sequences of Unicode characters or 'code points'. It includes a few additional
-  utilities to make working with code points a little more pleasant."
+  utilities to make working with code points a little more convenient."
   (:require [clojure.core.protocols :refer [CollReduce]]
             [clojure.core.reducers :as r]
             [clojure.spec.alpha :as s]
@@ -59,7 +59,6 @@
                (rf result (Character/toCodePoint c1 c)))
            (Character/isHighSurrogate c)
            (let [result (rf result (int c1))]
-             ;; Must discard state when reduced, required by completion.
              (vreset! high (if (reduced? result) nil c))
              result)
            :else
@@ -142,10 +141,9 @@
 
 (defn append!
   "Reducing function applicable to code point input, with accumulation based on
-  (mutable) StringBuilder.
-
-  Primarily for use as reducing function in reduce and transduce. For example:
-  (transduce xf append! (codepoints \"abc\"))"
+  (mutable) StringBuilder. When called with no arguments, returns a new
+  StringBuilder, when called with a StringBuilder argument, returns its contents
+  as a string (these arities are for use in init and completion of transduce)."
   ([] (StringBuilder.))
   ([^StringBuilder sb] (.toString sb))
   ([^StringBuilder sb cp] (.appendCodePoint sb (int cp))))
@@ -155,9 +153,9 @@
   supplied, applies the transform to the inputs before appending them to the
   result.
 
-  This is a convenience function around reduce/transduce with reducing function
-  append!, so coll must either directly or by way of transformation through xform
-  consist of Unicode code points."
+  This is a convenience function around transduce with reducing function append!,
+  so coll must either directly or by way of transformation through xform consist
+  of code points."
   ([coll]
    (to-str identity coll))
   ([xform coll]
