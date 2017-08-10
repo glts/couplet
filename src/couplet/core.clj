@@ -40,7 +40,7 @@
   :args (s/cat :codepoint ::codepoint)
   :ret string?
   :fn #(= (count (:ret %))
-          (if (Character/isBmpCodePoint (-> % :args :codepoint)) 1 2)))
+          (if (-> % :args :codepoint Character/isBmpCodePoint) 1 2)))
 
 (defn- codepoint-xform
   [rf]
@@ -142,7 +142,7 @@
 (defn append!
   "Reducing function applicable to code point input, with accumulation based on
   (mutable) StringBuilder. When called with no arguments, returns a new
-  StringBuilder, when called with a StringBuilder argument, returns its contents
+  StringBuilder; when called with a StringBuilder argument, returns its contents
   as a string (these arities are for use in init and completion of transduce)."
   ([] (StringBuilder.))
   ([^StringBuilder sb] (.toString sb))

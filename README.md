@@ -19,23 +19,27 @@ This library targets Clojure on the JVM.
 
 ## Dependency information
 
-    [ch.gluet/couplet "0.0.5"]
+```clojure
+[ch.gluet/couplet "0.0.5"]
+```
 
 ## Usage
 
 Require the core namespace as `cp`, then use `cp/codepoints` to obtain a seqable
 of code points.
 
-    (require '[couplet.core :as cp])
+```clojure
+(require '[couplet.core :as cp])
 
-    (cp/codepoints "b🐝e🌻e")
-    ; => #couplet.core.CodePointSeq["b🐝e🌻e"]
+(cp/codepoints "b🐝e🌻e")
+; => #couplet.core.CodePointSeq["b🐝e🌻e"]
 
-    (seq (cp/codepoints "b🐝e🌻e"))
-    ; => (98 128029 101 127803 101)
+(seq (cp/codepoints "b🐝e🌻e"))
+; => (98 128029 101 127803 101)
 
-    (->> "b🐝e🌻e" cp/codepoints (take-nth 2) cp/to-str)
-    ; => "bee"
+(->> "b🐝e🌻e" cp/codepoints (take-nth 2) cp/to-str)
+; => "bee"
+```
 
 ## Documentation
 
@@ -66,7 +70,9 @@ library for Unicode.
 
 Run the included benchmarks with
 
-    lein trampoline with-profile +benchmark run
+```
+lein trampoline with-profile +benchmark run
+```
 
 (Warning: this can easily take half an hour.)
 
