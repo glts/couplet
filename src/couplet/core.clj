@@ -4,12 +4,10 @@
   Couplet provides support for treating CharSequences (such as strings) as
   sequences of Unicode characters or 'code points'. It includes a few additional
   utilities to make working with code points a little more convenient."
-  (:require [clojure.core.protocols :refer [CollReduce]]
-            [clojure.core.reducers :as r]
+  (:require [clojure.core.reducers :as r]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen])
-  (:import [clojure.lang Sequential]
-           [java.io Writer]
+  (:import [java.io Writer]
            [java.util.concurrent Callable ForkJoinPool ForkJoinTask]))
 
 (defn codepoint?
@@ -93,14 +91,14 @@
       ret)))
 
 (deftype CodePointSeq [^CharSequence s]
-  Sequential
-
   Iterable
   (iterator [_]
     (.iterator (.codePoints s)))
 
-  CollReduce
-  (coll-reduce [_ f]
+  clojure.lang.Sequential
+
+  clojure.lang.IReduce
+  (reduce [_ f]
     (case (.length s)
       0 (f)
       1 (int (.charAt s 0))
@@ -111,7 +109,7 @@
           val
           (codepoint-reduce s 2 f val))
         (codepoint-reduce s 1 f (int (.charAt s 0))))))
-  (coll-reduce [_ f val]
+  (reduce [_ f val]
     (if (zero? (.length s))
       val
       (codepoint-reduce s 0 f val))))
@@ -153,9 +151,8 @@
   supplied, applies the transform to the inputs before appending them to the
   result.
 
-  This is a convenience function around transduce with reducing function append!,
-  so coll must either directly or by way of transformation through xform consist
-  of code points."
+  Same as (transduce xform append! coll), so coll must either directly or by way
+  of transformation through xform consist of code points."
   ([coll]
    (to-str identity coll))
   ([xform coll]
