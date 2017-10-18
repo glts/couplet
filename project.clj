@@ -3,18 +3,15 @@
   :url "https://github.com/glts/couplet"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-
-  :dependencies [[org.clojure/clojure "1.9.0-alpha17" :scope "provided"]
-                 [org.clojure/spec.alpha "0.1.123" :scope "provided"]]
-  :plugins [[lein-codox "0.10.3"]]
-  :profiles {:dev {:dependencies [[org.clojure/test.check "0.9.0"]
-                                  [criterium "0.4.4"]]}
-             :benchmark {:main couplet.core-benchmark
-                         :source-paths ["benchmark"]
-                         :jvm-opts ^:replace []}}
+  :dependencies [[org.clojure/clojure "1.9.0-beta2" :scope "provided"]
+                 [org.clojure/spec.alpha "0.1.134" :scope "provided"]]
+  :plugins [[lein-codox "0.10.3"]
+            [lein-jmh "0.2.1"]]
+  :profiles {:dev {:dependencies [[org.clojure/test.check "0.9.0"]]
+                   :source-paths ["dev"]}
+             :jmh {:jvm-opts []}}
 
   ;; Adjust Leiningen's JAR build output: do not declare a Main-Class or leak
-  ;; the login name in the manifest, and omit unnecessarily included file.
+  ;; the login name in the manifest.
   :main nil
-  :jar-exclusions [#"^project\.clj$"]
   :manifest {"Built-By" "David Bürgin"})

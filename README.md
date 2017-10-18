@@ -68,20 +68,17 @@ library for Unicode.
 
 ## Performance
 
-Run the included benchmarks with
+Run the benchmarks with
 
 ```
-lein trampoline with-profile +benchmark run
+lein jmh '{:type :quick}'
 ```
-
-(Warning: this can easily take half an hour.)
 
 The following is a short summary of the findings.
 
 Broadly speaking, processing strings using code points instead of `char`s has no
 negative impact on performance. On the contrary, the performance achieved here
 compares favourably with that of Clojure’s own `char`-based string processing.
-At the time of writing, the following rough performance figures hold.
 
 *   Reduce is faster than processing a lazy seq of code points by a factor of 3.
 *   Parallel fold can be faster than reduce by a factor proportional to the

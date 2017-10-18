@@ -1,0 +1,61 @@
+{:benchmarks
+ [{:name :count
+   :fn [couplet.core-benchmark/reducing-codepoints-count
+        couplet.core-benchmark/transducing-codepoints-count
+        couplet.core-benchmark/lazy-codepoints-count
+        couplet.core-benchmark/naive-lazy-codepoints-count
+        couplet.core-benchmark/chunked-lazy-codepoints-count
+        couplet.core-benchmark/folding-codepoints-count]
+   :args [:string]}
+
+  {:name :char-count
+   :fn [couplet.core-benchmark/clojure-char-count
+        couplet.core-benchmark/clojure-lazy-char-count]
+   :args [:string]}
+
+  {:name :jdk-count
+   :fn [couplet.core-benchmark/jdk-char-sequence-chars-count
+        couplet.core-benchmark/jdk-char-sequence-code-points-count]
+   :args [:string]}
+
+  {:name :reduce-frequencies
+   :fn couplet.core-benchmark/reduce-frequencies
+   :args [:string]}
+
+  {:name :fold-frequencies
+   :fn couplet.core-benchmark/fold-frequencies
+   :args [:param/partition-size :state/string]}
+
+  {:name :reducers
+   :fn [couplet.core-benchmark/reducer-foldcat
+        couplet.core-benchmark/reducer-fold-combining
+        couplet.core-benchmark/reducer-sequential]
+   :args [:string]}
+
+  {:name :to-str
+   :fn [couplet.core-benchmark/to-str
+        couplet.core-benchmark/transducing-to-str]
+   :args [:codepoints]}
+
+  {:name :apply-str
+   :fn [couplet.core-benchmark/clojure-apply-str
+        couplet.core-benchmark/clojure-apply-str-with-filter]
+   :args [:chars]}]
+
+ :states
+ {:string
+  {:fn couplet.core-benchmark/generate-string
+   :args [:generator :length]}
+
+  :codepoints
+  {:fn (partial into [] (couplet.core/codepoints))
+   :args [:state/string]}
+
+  :chars
+  {:fn (partial into [])
+   :args [:state/string]}}
+
+ :params
+ {:generator [gen-text gen-ascii]
+  :length 1e6
+  :partition-size [512 8192 131072]}}
