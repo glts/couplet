@@ -23,7 +23,7 @@
 
   The predefined spec :couplet.core/codepoint validates all code points."
   [start end]
-  `(s/spec #(s/int-in-range? ~start (inc ~end) %)
+  `(s/spec #(and (int? %) (<= ~start % ~end))
      :gen #(gen/fmap int (gen/choose ~start ~end))))
 
 (s/def ::codepoint
@@ -140,8 +140,8 @@
 (defn append!
   "Reducing function applicable to code point input, with accumulation based on
   (mutable) StringBuilder. When called with no arguments, returns a new
-  StringBuilder; when called with a StringBuilder argument, returns its contents
-  as a string (these arities are for use in init and completion of transduce)."
+  StringBuilder. When called with a StringBuilder argument, returns its contents
+  as a string (for use in completion of transduce)."
   ([] (StringBuilder.))
   ([^StringBuilder sb] (.toString sb))
   ([^StringBuilder sb cp] (.appendCodePoint sb (int cp))))

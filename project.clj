@@ -8,7 +8,8 @@
   :plugins [[lein-codox "0.10.3"]
             [lein-jmh "0.2.1"]]
   :profiles {:dev {:dependencies [[org.clojure/test.check "0.9.0"]]
-                   :source-paths ["dev"]}
+                   :source-paths ["dev"]
+                   :global-vars {*warn-on-reflection* true}}
              :jmh {:jvm-opts []}}
 
   ;; Adjust Leiningen's JAR build output: do not declare a Main-Class or leak
