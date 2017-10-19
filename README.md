@@ -71,7 +71,7 @@ library for Unicode.
 Run the benchmarks with
 
 ```
-lein jmh '{:type :quick}'
+lein jmh '{:type :quick, :format :table}'
 ```
 
 The following is a short summary of the findings.

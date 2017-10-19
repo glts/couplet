@@ -7,8 +7,8 @@
 
 ;; We begin by requiring the main namespace, couplet.core, aliasing it as 'cp'.
 ;; Just for this walkthrough, let's also :refer the few functions from that
-;; namespace. The names have been chosen such that both namespace aliasing and
-;; referring can be used, according with your preference.
+;; namespace.
+
 (require '[couplet.core :as cp :refer :all])
 
 
@@ -77,14 +77,10 @@
 (defn emoji? [cp]
   (= java.lang.Character$UnicodeBlock/EMOTICONS (unicode-block cp)))
 
-;; Then process to your heart's content: filter ...
-(->> (codepoints "feeling🙃") (remove emoji?) to-str)
-
-;; ... map ...
-(map #(Character/getName %) (codepoints "🌹💃🌻"))
-
-;; ... reduce.
-(codepoint-str (reduce max -1 (codepoints "h🌝llo")))
+;; Then process to your heart's content: filter, map, reduce ...
+(->> (codepoints "feeling😀")
+     (filter emoji?)
+     (map #(Character/getName %)))
 
 ;; One more thing about 'codepoints': in those rare situations where you're
 ;; dealing with chars that don't come as a CharSequence, use the transducer:
@@ -108,24 +104,23 @@
 
 (not-any? surrogate? (codepoints "abc\ud930def"))  ; U+D930 is a surrogate
 
-;; Or you may choose to replace surrogates with the U+FFFD replacement
-;; character. Such decisions are up to.
+;; Or you may choose to replace isolated surrogates with the U+FFFD replacement
+;; character. This decision is up to you.
 
-(def sanitize-isolated-surrogates
+(def sanitize-surrogates
   (map #(if (surrogate? %) 0xFFFD %)))
 
-(to-str sanitize-isolated-surrogates (codepoints "abc\ud930def"))
+(to-str sanitize-surrogates (codepoints "abc\ud930def"))
 
 
 ;; Fast reduction
 
-;; The nice thing about having a custom type represent a sequence of code points
-;; is that it allows that type to be extended to some core Clojure protocols to
-;; achieve good performance.
+;; Thanks to the custom type that represents a sequence of code points,
+;; additional performance gains become possible.
 
 ;; First, CodePointSeq is reducible, that is, reducing a CodePointSeq is fast,
 ;; faster than iterating over a lazy seq of code points. Let's show the
-;; performance difference for a large input string. First let us introduce a
+;; performance difference for a large input string. First we introduce a
 ;; sample string generator, and then use that to generate a large string.
 
 (defn generate-text [n]
@@ -137,7 +132,8 @@
 (def large-string (generate-text 500000))  ; may take a few seconds
 
 ;; Now compare the two reductions. The second, reducible invocation is clearly
-;; faster than the lazy one (up to 3x according to the benchmarks).
+;; much faster than the lazy one.
+
 (time (into #{} (seq (codepoints large-string))))
 (time (into #{} (codepoints large-string)))
 
@@ -150,11 +146,13 @@
 ;; Folding is done by using the fold function from the reducers namespace. If
 ;; you are not familiar with fold, I recommend reading its doc string before
 ;; studying the example.
+
 (require '[clojure.core.reducers :as r])
 
 ;; In the following example we classify the code points of a random
 ;; one-million-character string and print the five most frequently occurring
 ;; Unicode blocks. We do this once with plain reduce, once with parallel fold.
+;; On my machine, the speedup afforded by r/fold approaches 3x.
 
 (defn update-frequencies [m cp]
   (let [block (or (unicode-block cp) :none)]
@@ -167,14 +165,12 @@
 (let [one-million-cps (to-str (repeatedly 1e6 #(rand-int 0x1FFFF)))]
   (doseq [reduce-or-fold
           [(fn [s] (reduce update-frequencies {} s))
-           (fn [s] (r/fold 8192 merge-frequencies update-frequencies s))]]
+           (fn [s] (r/fold 10000 merge-frequencies update-frequencies s))]]
     (time (->> (codepoints one-million-cps)
                reduce-or-fold
                (sort-by val >)
                (take 5)
                (run! println)))))
-
-;; On my machine, the speedup afforded by r/fold approaches 3x.
 
 
 ;; Spec
