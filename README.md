@@ -20,7 +20,7 @@ This library targets Clojure on the JVM.
 ## Dependency information
 
 ```clojure
-[ch.gluet/couplet "0.0.5"]
+[ch.gluet/couplet "0.1.0"]
 ```
 
 ## Usage
