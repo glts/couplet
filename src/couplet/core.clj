@@ -1,13 +1,9 @@
 (ns couplet.core
-  "Unicode code points support for Clojure.
-
-  Couplet provides support for treating CharSequences (such as strings) as
-  sequences of Unicode characters or 'code points'. It includes a few additional
-  utilities to make working with code points a little more convenient."
+  "Core utilities for working with Unicode code points."
   (:require [clojure.core.reducers :as r]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen])
-  (:import [java.io Writer]
+  (:import java.io.Writer
            [java.util.concurrent Callable ForkJoinPool ForkJoinTask]))
 
 (defn codepoint?
@@ -71,23 +67,16 @@
            (rf result (int c))))))))
 
 (defn- codepoint-reduce
-  [^CharSequence s i f val]
-  (loop [i (int i)
+  [^CharSequence s ^long i f val]
+  (loop [i i
          ret val]
     (if (< i (.length s))
-      (let [c1 (.charAt s i)
-            i (inc i)]
-        (if (and (Character/isHighSurrogate c1)
-                 (< i (.length s))
-                 (Character/isLowSurrogate (.charAt s i)))
-          (let [ret (f ret (Character/toCodePoint c1 (.charAt s i)))]
-            (if (reduced? ret)
-              @ret
-              (recur (inc i) ret)))
-          (let [ret (f ret (int c1))]
-            (if (reduced? ret)
-              @ret
-              (recur i ret)))))
+      (let [cp (Character/codePointAt s i)
+            ret (f ret cp)]
+        (if (reduced? ret)
+          @ret
+          (recur (+ i (if (Character/isBmpCodePoint cp) 1 2))
+                 ret)))
       ret)))
 
 (deftype CodePointSeq [^CharSequence s]
