@@ -1,3 +1,7 @@
+# Clojure
+/.cpcache/
+
+# Leiningen
 /target/
 /.lein-*
 /.nrepl-port
