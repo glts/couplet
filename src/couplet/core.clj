@@ -111,13 +111,13 @@
     (print-method (map codepoint-str cps) w)))
 
 (defn codepoints
-  "Returns a value that acts like a sequence of code points from the given
-  CharSequence s. The result is of type couplet.core.CodePointSeq, a type which is
-  seqable, reducible, and foldable. The wrapped CharSequence is treated as
-  immutable (like a string).
+  "Returns a value that acts like a sequence of code points produced from the given
+  CharSequence s. The result is of a type that is seqable, reducible, and
+  foldable. The wrapped CharSequence is treated as immutable (like a string).
 
-  Unlike CharSequence, CodePointSeq is not counted? and does not support random
-  access. Use seq to obtain a regular (lazy) seq of code points.
+  Unlike CharSequence, the value returned from codepoints is not counted? and does
+  not support random access. Use seq to obtain a regular (lazy) seq of code
+  points.
 
   When no argument is supplied, returns a stateful transducer that transforms char
   inputs to code points."
