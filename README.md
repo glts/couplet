@@ -19,8 +19,16 @@ This library targets Clojure on the JVM.
 
 ## Dependency information
 
+Clojure CLI tools:
+
 ```clojure
-[ch.gluet/couplet "0.1.0"]
+ch.gluet/couplet {:mvn/version "0.1.1"}
+```
+
+Leiningen/Boot:
+
+```clojure
+[ch.gluet/couplet "0.1.1"]
 ```
 
 ## Usage
