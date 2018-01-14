@@ -4,7 +4,7 @@
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen])
   (:import java.io.Writer
-           [java.util.concurrent Callable ForkJoinPool ForkJoinTask]))
+           [java.util.concurrent ForkJoinPool ForkJoinTask]))
 
 (defn codepoint?
   "Returns true if x is a code point.
@@ -147,9 +147,6 @@
   ([xform coll]
    (transduce xform append! coll)))
 
-(defn- fork-join-task ^ForkJoinTask [^Callable f]
-  (ForkJoinTask/adapt f))
-
 (defn- fold-codepoints
   [^CharSequence s start end n combinef reducef]
   (if (or (<= (- end start) n)
@@ -162,8 +159,8 @@
                   (and (Character/isHighSurrogate (.charAt s (dec split)))
                        (Character/isLowSurrogate (.charAt s split)))
                   inc)
-          task (fork-join-task
-                 #(fold-codepoints s split end n combinef reducef))]
+          ^ForkJoinTask task
+          (r/fjtask #(fold-codepoints s split end n combinef reducef))]
       (.fork task)
       (combinef (fold-codepoints s start split n combinef reducef)
                 (.join task)))))
@@ -182,5 +179,5 @@
 
         :else
         (.invoke ^ForkJoinPool @r/pool
-                 (fork-join-task
+                 (r/fjtask
                    #(fold-codepoints s 0 (.length s) n combinef reducef)))))))
