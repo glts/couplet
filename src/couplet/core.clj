@@ -75,8 +75,7 @@
             ret (f ret cp)]
         (if (reduced? ret)
           @ret
-          (recur (+ i (if (Character/isBmpCodePoint cp) 1 2))
-                 ret)))
+          (recur (+ i (if (Character/isBmpCodePoint cp) 1 2)) ret)))
       ret)))
 
 (deftype CodePointSeq [^CharSequence s]
@@ -123,7 +122,7 @@
   inputs to code points."
   ([] codepoint-xform)
   ([s]
-   {:pre [(some? s)]}
+   {:pre [(instance? CharSequence s)]}
    (->CodePointSeq s)))
 
 (defn append!
