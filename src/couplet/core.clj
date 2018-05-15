@@ -131,7 +131,7 @@
   StringBuilder. When called with a StringBuilder argument, returns its contents
   as a string (for use in completion of transduce)."
   ([] (StringBuilder.))
-  ([^StringBuilder sb] (.toString sb))
+  ([^StringBuilder sb] (str sb))
   ([^StringBuilder sb cp] (.appendCodePoint sb (int cp))))
 
 (defn to-str
