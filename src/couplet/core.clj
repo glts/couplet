@@ -30,12 +30,6 @@
   [cp]
   (String/valueOf (Character/toChars cp)))
 
-(s/fdef codepoint-str
-  :args (s/cat :codepoint ::codepoint)
-  :ret string?
-  :fn #(= (count (:ret %))
-          (if (-> % :args :codepoint Character/isBmpCodePoint) 1 2)))
-
 (defn- codepoint-xform
   [rf]
   (let [high (volatile! nil)]
