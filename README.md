@@ -22,31 +22,31 @@ This library targets Clojure on the JVM.
 Clojure CLI tools:
 
 ```clojure
-ch.gluet/couplet {:mvn/version "0.1.1"}
+ch.gluet/couplet {:mvn/version "0.1.2"}
 ```
 
 Leiningen/Boot:
 
 ```clojure
-[ch.gluet/couplet "0.1.1"]
+[ch.gluet/couplet "0.1.2"]
 ```
 
 ## Usage
 
-Require the core namespace as `cp`, then use `cp/codepoints` to obtain a seqable
-of code points.
+Require the core namespace as `cp`, then use `cp/codepoints` to obtain a
+seqable/reducible of code points.
 
 ```clojure
 (require '[couplet.core :as cp])
 
 (cp/codepoints "b🐝e🌻e")
-; => #couplet.core.CodePointSeq["b🐝e🌻e"]
+;; => #couplet.core.CodePointSeq["b🐝e🌻e"]
 
 (seq (cp/codepoints "b🐝e🌻e"))
-; => (98 128029 101 127803 101)
+;; => (98 128029 101 127803 101)
 
 (->> "b🐝e🌻e" cp/codepoints (take-nth 2) cp/to-str)
-; => "bee"
+;; => "bee"
 ```
 
 ## Documentation
@@ -95,6 +95,10 @@ compares favourably with that of Clojure’s own `char`-based string processing.
     (reducing code points versus reducing a string) to faster by a factor of 3
     (`cp/to-str` versus `apply str`) to faster by a factor of 5 (lazy seq of
     code points versus lazy seq of `char`s).
+
+Strings support fast random access – code point seqs do not. For efficient
+lookup of code points by index consider a `vector-of :int` or Java array of
+`int`.
 
 ## Licence
 
