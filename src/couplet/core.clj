@@ -3,7 +3,8 @@
   (:require [clojure.core.reducers :as r]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen])
-  (:import java.io.Writer
+  (:import [clojure.lang IReduce Sequential]
+           java.io.Writer
            [java.util.concurrent ForkJoinPool ForkJoinTask]))
 
 (defn codepoint?
@@ -72,14 +73,32 @@
           (recur (+ i (if (Character/isBmpCodePoint cp) 1 2)) ret)))
       ret)))
 
+(defn- fold-codepoints
+  [^CharSequence s start end n combinef reducef]
+  (if (or (<= (- end start) n)
+          (and (= (- end start) 2)
+               (Character/isHighSurrogate (.charAt s start))
+               (Character/isLowSurrogate (.charAt s (inc start)))))
+    (codepoint-reduce (.subSequence s start end) 0 reducef (combinef))
+    (let [split (+ start (quot (- end start) 2))
+          split (cond-> split
+                  (and (Character/isHighSurrogate (.charAt s (dec split)))
+                       (Character/isLowSurrogate (.charAt s split)))
+                  inc)
+          ^ForkJoinTask task
+          (r/fjtask #(fold-codepoints s split end n combinef reducef))]
+      (.fork task)
+      (combinef (fold-codepoints s start split n combinef reducef)
+                (.join task)))))
+
 (deftype CodePointSeq [^CharSequence s]
   Iterable
   (iterator [_]
     (.iterator (.codePoints s)))
 
-  clojure.lang.Sequential
+  Sequential
 
-  clojure.lang.IReduce
+  IReduce
   (reduce [_ f]
     (case (.length s)
       0 (f)
@@ -94,7 +113,21 @@
   (reduce [_ f val]
     (if (zero? (.length s))
       val
-      (codepoint-reduce s 0 f val))))
+      (codepoint-reduce s 0 f val)))
+
+  r/CollFold
+  (coll-fold [_ n combinef reducef]
+    (cond
+      (zero? (.length s))
+      (combinef)
+
+      (<= (.length s) n)
+      (codepoint-reduce s 0 reducef (combinef))
+
+      :else
+      (.invoke ^ForkJoinPool @r/pool
+               (r/fjtask
+                 #(fold-codepoints s 0 (.length s) n combinef reducef))))))
 
 (defmethod print-method CodePointSeq
   [^CodePointSeq cps ^Writer w]
@@ -139,38 +172,3 @@
    (to-str identity coll))
   ([xform coll]
    (transduce xform append! coll)))
-
-(defn- fold-codepoints
-  [^CharSequence s start end n combinef reducef]
-  (if (or (<= (- end start) n)
-          (and (= (- end start) 2)
-               (Character/isHighSurrogate (.charAt s start))
-               (Character/isLowSurrogate (.charAt s (inc start)))))
-    (reduce reducef (combinef) (->CodePointSeq (.subSequence s start end)))
-    (let [split (+ start (quot (- end start) 2))
-          split (cond-> split
-                  (and (Character/isHighSurrogate (.charAt s (dec split)))
-                       (Character/isLowSurrogate (.charAt s split)))
-                  inc)
-          ^ForkJoinTask task
-          (r/fjtask #(fold-codepoints s split end n combinef reducef))]
-      (.fork task)
-      (combinef (fold-codepoints s start split n combinef reducef)
-                (.join task)))))
-
-;; Note that partition size n is based on chars, not code points.
-(extend-type CodePointSeq
-  r/CollFold
-  (coll-fold [cps n combinef reducef]
-    (let [^CharSequence s (.s cps)]
-      (cond
-        (zero? (.length s))
-        (combinef)
-
-        (<= (.length s) n)
-        (reduce reducef (combinef) cps)
-
-        :else
-        (.invoke ^ForkJoinPool @r/pool
-                 (r/fjtask
-                   #(fold-codepoints s 0 (.length s) n combinef reducef)))))))
