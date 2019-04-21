@@ -26,6 +26,11 @@
 (s/def ::codepoint
   (codepoint-in Character/MIN_CODE_POINT Character/MAX_CODE_POINT))
 
+(defn surrogate?
+  "Returns true if code point cp is a surrogate code point."
+  [cp]
+  (and (Character/isBmpCodePoint cp) (Character/isSurrogate (unchecked-char cp))))
+
 (defn codepoint-str
   "Returns a string containing the Unicode character specified by code point cp."
   [cp]
