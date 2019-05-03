@@ -1,5 +1,11 @@
 # Couplet changelog
 
+## 0.2.0 (2019-05-03)
+
+*   The value returned by `couplet.core/codepoints` now implements the
+    `clojure.core.reducers/CollFold` protocol directly.
+*   Add `couplet.core/surrogate?`.
+
 ## 0.1.2 (2018-09-17)
 
 *   Assert that the argument to `couplet.core/codepoints` is of type

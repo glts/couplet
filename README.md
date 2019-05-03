@@ -22,13 +22,13 @@ This library targets Clojure on the JVM.
 deps.edn:
 
 ```clojure
-ch.gluet/couplet {:mvn/version "0.1.2"}
+ch.gluet/couplet {:mvn/version "0.2.0"}
 ```
 
 Leiningen/Boot:
 
 ```clojure
-[ch.gluet/couplet "0.1.2"]
+[ch.gluet/couplet "0.2.0"]
 ```
 
 ## Documentation
