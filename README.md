@@ -73,13 +73,13 @@ This function can take a transducer as the first argument to apply an additional
 transformation to the inputs.
 
 ```clojure
-(def bee
+(def bee-codepoints
   (into [] (cp/codepoints "b🐝e🌻e")))
 
-(cp/to-str bee)
+(cp/to-str bee-codepoints)
 ; => "b🐝e🌻e"
 
-(cp/to-str (take-nth 2) bee)
+(cp/to-str (take-nth 2) bee-codepoints)
 ; => "bee"
 ```
 
@@ -164,7 +164,7 @@ Thanks to the attached generator you can generate test data easily.
 ; => "🍍🍍🍆🍅🍎🍓🍊🍌🍍🍓"
 ```
 
-Code point literals are occasionally useful, for example when attempting to
+Code point _literals_ are occasionally useful, for example when attempting to
 write human-readable `cp/codepoint-in` specs. Register a tagged literal of your
 choice to enable code point literals; the following snippet shows how.
 
