@@ -237,7 +237,7 @@ lookup of code points by index consider a `vector-of :int` or Java array of
 
 ## Licence
 
-Copyright © 2019 David Bürgin
+Copyright © 2017–2020 David Bürgin
 
 Distributed under the Eclipse Public License either version 1.0 or (at your
 option) any later version.

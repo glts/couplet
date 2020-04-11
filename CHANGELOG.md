@@ -1,5 +1,9 @@
 # Couplet changelog
 
+## next (unreleased)
+
+*   Bump dependency versions.
+
 ## 0.2.0 (2019-05-03)
 
 *   The value returned by `couplet.core/codepoints` now implements the
