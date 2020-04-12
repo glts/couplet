@@ -3,6 +3,7 @@
 ## next (unreleased)
 
 *   Bump dependency versions.
+*   Update use of deprecated test.check functions in tests.
 
 ## 0.2.0 (2019-05-03)
 

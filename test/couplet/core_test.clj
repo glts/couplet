@@ -137,7 +137,7 @@
 
 (defspec codepoints-transducer-handles-reduced-results
   (for-all [s gen-text
-            n gen/s-pos-int]
+            n (gen/fmap inc gen/nat)]
     (= (vec (take n (baseline-codepoints s)))
        (transduce (comp (cp/codepoints) (take n)) conj s)
        (transduce (cp/codepoints) (conj-taking n) s))))
@@ -219,6 +219,6 @@
   (let [update-freqs #(update %1 %2 (fnil inc 0))
         merge-freqs (r/monoid (partial merge-with +) hash-map)]
     (for-all [s gen-text
-              n gen/s-pos-int]
+              n (gen/fmap inc gen/nat)]
       (= (frequencies (baseline-codepoints s))
          (r/fold n merge-freqs update-freqs (cp/codepoints s))))))
