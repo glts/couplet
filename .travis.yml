@@ -1,3 +1,5 @@
+dist: bionic
 language: clojure
 jdk:
   - openjdk8
+  - openjdk11
