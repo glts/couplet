@@ -1,6 +1,6 @@
 # Couplet changelog
 
-## next (unreleased)
+## 0.2.1 (2020-04-12)
 
 *   Bump dependency versions.
 *   Update use of deprecated test.check functions in tests.
